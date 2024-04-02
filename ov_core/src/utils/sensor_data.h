@@ -78,6 +78,27 @@ struct CameraData {
   }
 };
 
+
+
+struct TrackerData {
+  // Timestamp of the reading
+  double timestamp;
+
+  /// Camera ids for each of the images collected
+  std::vector<int> sensor_ids;
+  /* Decide on the form of the tracked points struct TrackedPoint{ uint32 id ; uint32 age ; float32 response ; float32 tracking_error}
+   std::vector<std::vector<TrackedPoint>> tracked_points */
+  bool operator<(const CameraData &other) const {
+    if (timestamp == other.timestamp) {
+      int id = *std::min_element(sensor_ids.begin(), sensor_ids.end());
+      int id_other = *std::min_element(other.sensor_ids.begin(), other.sensor_ids.end());
+      return id < id_other;
+    } else {
+      return timestamp < other.timestamp;
+    }
+  }
+}
+
 } // namespace ov_core
 
 #endif // OV_CORE_SENSOR_DATA_H
