@@ -40,6 +40,7 @@
 #include <sensor_msgs/point_cloud2_iterator.h>
 #include <std_msgs/Float64.h>
 #include <tf/transform_broadcaster.h>
+#include "ov_msckf/RestartOv.h"
 
 #include <atomic>
 #include <fstream>
@@ -87,6 +88,14 @@ public:
    * @param parser Configuration file parser
    */
   void setup_subscribers(std::shared_ptr<ov_core::YamlParser> parser);
+
+  /**
+   * The idea of this function is to simply reset all the system. Meaning all the state at runtime.
+   * This simply means restarting all this system without exiting the executable
+   */
+  bool reset(std::shared_ptr<ov_core::YamlParser> parser) ;
+
+  bool ros_reset(ov_msckf::RestartOv::Request& req  , ov_msckf::RestartOv::Response& res) ; 
 
   /**
    * @brief Will visualize the system if we have new things

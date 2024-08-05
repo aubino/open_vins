@@ -148,6 +148,30 @@ ROS1Visualizer::ROS1Visualizer(std::shared_ptr<ros::NodeHandle> nh, std::shared_
   }
 }
 
+bool ROS1Visualizer::reset(std::shared_ptr<ov_core::YamlParser> parser)
+{
+  if(!_app->initialized()) return false ; 
+  // Step 1 : Cut off all incoming data
+  assert(parser != nullptr); 
+  sub_imu.shutdown() ; // If we cut of all incoming imu data,  we will surely have no update possible.
+  //Step2 : Create a new vio app
+  VioManagerOptions params;
+  params.print_and_load(parser);
+  params.use_multi_threading_subs = true;
+  _app =  std::make_shared<VioManager>(params);
+  // Create imu subscriber (handle legacy ros param info)
+  std::string topic_imu;
+  _nh->param<std::string>("topic_imu", topic_imu, "/imu0");
+  parser->parse_external("relative_config_imu", "imu0", "rostopic", topic_imu);
+  sub_imu = _nh->subscribe(topic_imu, 1000, &ROS1Visualizer::callback_inertial, this);
+  PRINT_INFO("Re - subscribing to IMU: %s\n", topic_imu.c_str());
+}
+
+bool ROS1Visualizer::ros_reset(ov_msckf::RestartOv::Request& req  , ov_msckf::RestartOv::Response& res)
+{
+  
+}
+
 void ROS1Visualizer::setup_subscribers(std::shared_ptr<ov_core::YamlParser> parser) {
 
   // We need a valid parser

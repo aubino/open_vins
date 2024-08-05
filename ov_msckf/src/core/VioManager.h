@@ -136,6 +136,15 @@ public:
     feat_tracks_uvd = active_tracks_uvd;
   }
 
+  /**
+   * @brief This function will try to setup the reinitialization of the 
+   * State after a loss of the state consistency
+   * It will internally call try_to_initialize under a number of conditions.
+   * @param message Contains our timestamp, images, and camera ids
+   * @return True if we have successfully initialized
+   */
+  bool re_initialize(const ov_core::CameraData &message) ; 
+
 protected:
   /**
    * @brief Given a new set of camera images, this will track them.

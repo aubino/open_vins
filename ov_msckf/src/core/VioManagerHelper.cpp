@@ -75,6 +75,8 @@ void VioManager::initialize_with_gt(Eigen::Matrix<double, 17, 1> imustate) {
   PRINT_DEBUG(GREEN "[INIT]: position = %.4f, %.4f, %.4f\n" RESET, state->_imu->pos()(0), state->_imu->pos()(1), state->_imu->pos()(2));
 }
 
+
+
 bool VioManager::try_to_initialize(const ov_core::CameraData &message) {
 
   // Directly return if the initialization thread is running
@@ -185,6 +187,15 @@ bool VioManager::try_to_initialize(const ov_core::CameraData &message) {
     thread.detach();
   }
   return false;
+}
+
+bool VioManager::re_initialize(const ov_core::CameraData &message)
+{
+  if(!initialized()) return false ; // If we have not initialized before, return right away since you need to initilize before re-initialization
+  if (thread_init_running)  return false; // If the initialization thread is running, leave the try_to_initialize do its work ; 
+  thread_init_success = false ;
+  is_initialized_vio = false ;  
+  
 }
 
 void VioManager::retriangulate_active_tracks(const ov_core::CameraData &message) {
