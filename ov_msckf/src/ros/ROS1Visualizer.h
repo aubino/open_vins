@@ -40,7 +40,6 @@
 #include <sensor_msgs/point_cloud2_iterator.h>
 #include <std_msgs/Float64.h>
 #include <tf/transform_broadcaster.h>
-#include "ov_msckf/RestartOv.h"
 
 #include <atomic>
 #include <fstream>
@@ -154,6 +153,7 @@ protected:
   ros::Publisher pub_points_msckf, pub_points_slam, pub_points_aruco, pub_points_sim;
   ros::Publisher pub_loop_pose, pub_loop_point, pub_loop_extrinsic, pub_loop_intrinsics;
   std::shared_ptr<tf::TransformBroadcaster> mTfBr;
+  ros::ServiceServer restart_service ; 
 
   // Our subscribers and camera synchronizers
   ros::Subscriber sub_imu;

@@ -51,6 +51,8 @@ ROS1Visualizer::ROS1Visualizer(std::shared_ptr<ros::NodeHandle> nh, std::shared_
   PRINT_DEBUG("Publishing: %s\n", pub_odomimu.getTopic().c_str());
   pub_pathimu = nh->advertise<nav_msgs::Path>("pathimu", 2);
   PRINT_DEBUG("Publishing: %s\n", pub_pathimu.getTopic().c_str());
+  //restart_service = = nh->advertiseServicev("reset_ov", &ROS1Visualizer::ros_reset, this) ; 
+  //PRINT_DEBUG("Setting up Reset service");
 
   // 3D points publishing
   pub_points_msckf = nh->advertise<sensor_msgs::PointCloud2>("points_msckf", 2);
@@ -167,10 +169,13 @@ bool ROS1Visualizer::reset(std::shared_ptr<ov_core::YamlParser> parser)
   PRINT_INFO("Re - subscribing to IMU: %s\n", topic_imu.c_str());
 }
 
-bool ROS1Visualizer::ros_reset(ov_msckf::RestartOv::Request& req  , ov_msckf::RestartOv::Response& res)
-{
-  
-}
+//bool ROS1Visualizer::ros_reset(ov_msckf::RestartOv::Request& req  , ov_msckf::RestartOv::Response& res)
+//{
+//  auto parser = std::make_shared<ov_core::YamlParser>(req.estimator_config_path);
+//  bool _res = reset(parser) ;
+//  res.error_code = _res ; 
+//  return _res ;  
+//}
 
 void ROS1Visualizer::setup_subscribers(std::shared_ptr<ov_core::YamlParser> parser) {
 
