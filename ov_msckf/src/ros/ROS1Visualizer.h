@@ -50,6 +50,7 @@
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/filesystem.hpp>
 #include <cv_bridge/cv_bridge.h>
+#include <ov_reset/RestartOv.h>
 
 namespace ov_core {
 class YamlParser;
@@ -94,7 +95,7 @@ public:
    */
   bool reset(std::shared_ptr<ov_core::YamlParser> parser) ;
 
-  bool ros_reset(ov_msckf::RestartOv::Request& req  , ov_msckf::RestartOv::Response& res) ; 
+  bool ros_reset(ov_reset::RestartOv::Request& req  , ov_reset::RestartOv::Response& res) ; 
 
   /**
    * @brief Will visualize the system if we have new things

@@ -1,19 +1,14 @@
 cmake_minimum_required(VERSION 3.3)
 
 # Find ROS build system
-find_package(catkin QUIET COMPONENTS roscpp rosbag tf std_msgs geometry_msgs sensor_msgs nav_msgs visualization_msgs image_transport cv_bridge ov_core ov_init message_generation )
+find_package(catkin QUIET COMPONENTS roscpp rosbag tf std_msgs geometry_msgs sensor_msgs nav_msgs visualization_msgs image_transport cv_bridge ov_core ov_init ov_reset message_generation )
 
 # Describe ROS project
 option(ENABLE_ROS "Enable or disable building with ROS (if it is found)" ON)
 if (catkin_FOUND AND ENABLE_ROS)
-    add_service_files( FILES RestartOv.srv)
-    generate_messages(
-        DEPENDENCIES
-        std_msgs  # and/or other packages containing depended messages
-        )
     add_definitions(-DROS_AVAILABLE=1)
     catkin_package(
-            CATKIN_DEPENDS roscpp rosbag tf std_msgs geometry_msgs sensor_msgs nav_msgs visualization_msgs image_transport cv_bridge ov_core ov_init
+            CATKIN_DEPENDS roscpp rosbag tf std_msgs geometry_msgs sensor_msgs nav_msgs visualization_msgs image_transport cv_bridge ov_core ov_init ov_reset
             INCLUDE_DIRS src/
             LIBRARIES ov_msckf_lib
     )
@@ -127,7 +122,6 @@ if (catkin_FOUND AND ENABLE_ROS)
     )
 
     add_executable(run_subscribe_msckf src/run_subscribe_msckf.cpp)
-    add_dependencies( run_subscribe_msckf ${PROJECT_NAME}_generate_messages_cpp )
     target_link_libraries(run_subscribe_msckf ov_msckf_lib ${thirdparty_libraries})
     install(TARGETS run_subscribe_msckf
             ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
