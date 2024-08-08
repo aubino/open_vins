@@ -172,6 +172,8 @@ bool ROS1Visualizer::reset(std::shared_ptr<ov_core::YamlParser> parser)
 
 bool ROS1Visualizer::ros_reset(ov_reset::RestartOv::Request& req  , ov_reset::RestartOv::Response& res)
 {
+  boost::filesystem::path file_path(req.estimator_config_path);
+  if(!boost::filesystem::exists(file_path)) return false ;
   auto parser = std::make_shared<ov_core::YamlParser>(req.estimator_config_path);
   bool _res = reset(parser) ;
   res.error_code = _res ; 
