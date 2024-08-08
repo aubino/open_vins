@@ -1,4 +1,36 @@
-#include "drift_detector.h"
+#include "ov_reset/drift_detector.h"
+
+// Function to extract standard deviations from odometry covariance
+std::pair<double, double> extract_std_dev(const nav_msgs::Odometry& odom) {
+    // Convert the covariance array to an Eigen matrix
+    Eigen::Matrix<double, 6, 6> covariance_matrix;
+    for (int i = 0; i < 6; ++i) {
+        for (int j = 0; j < 6; ++j) {
+            covariance_matrix(i, j) = odom.pose.covariance[i * 6 + j];
+        }
+    }
+
+    // Extract the 3x3 position covariance matrix
+    Eigen::Matrix3d position_covariance = covariance_matrix.block<3,3>(0, 0);
+
+    // Extract the 3x3 orientation covariance matrix
+    Eigen::Matrix3d orientation_covariance = covariance_matrix.block<3,3>(3, 3);
+
+    // Compute the eigenvalues for position covariance
+    Eigen::SelfAdjointEigenSolver<Eigen::Matrix3d> position_solver(position_covariance);
+    Eigen::Vector3d position_eigenvalues = position_solver.eigenvalues();
+
+    // Compute the eigenvalues for orientation covariance
+    Eigen::SelfAdjointEigenSolver<Eigen::Matrix3d> orientation_solver(orientation_covariance);
+    Eigen::Vector3d orientation_eigenvalues = orientation_solver.eigenvalues();
+
+    // Compute the standard deviations as the maximum square root of eigenvalues
+    double position_std_dev = position_eigenvalues.array().sqrt().maxCoeff();
+    double orientation_std_dev = orientation_eigenvalues.array().sqrt().maxCoeff();
+
+    // Return the standard deviations as a pair
+    return std::make_pair(position_std_dev, orientation_std_dev);
+}
 
 
 void OvDriftDetector::process_track_points(const sensor_msgs::PointCloud2::ConstPtr& msg)
@@ -17,7 +49,7 @@ void OvDriftDetector::process_track_points(const sensor_msgs::PointCloud2::Const
     if(res == 0)
     {
         // Tracking point has been low for the past track_timeout senconds. Trigger reset
-        ROS_INFO("Tracking points Lower than %d for the last %d seconds. ", min_track_points , track_timeout) ; 
+        ROS_INFO("Tracking points Lower than %d for the last %f seconds. ", min_track_points , track_timeout) ; 
         if(do_restart)
         {
             ROS_INFO("Triggering reset") ; 
@@ -43,7 +75,7 @@ void OvDriftDetector::process_slam_points(const sensor_msgs::PointCloud2::ConstP
     if(res == 0)
     {
         // Tracking point has been low for the past track_timeout senconds. Trigger reset
-        ROS_INFO("Slam points Lower than %d for the last %d seconds. ", min_track_points , track_timeout) ; 
+        ROS_INFO("Slam points Lower than %d for the last %f seconds. ", min_track_points , track_timeout) ; 
         if(do_restart)
         {
             ROS_INFO("Triggering reset") ; 
@@ -78,13 +110,13 @@ OvDriftDetector::OvDriftDetector(
     std::string slam_points_topic , 
     std::string odom_topic, 
     std::string restart_cfg , 
-    bool do_restart = false , 
-    bool publish_conf = false ,  
-    uint16_t min_track_points = 40, 
-    uint16_t min_slam_points = 8 , 
-    float track_timeout=3.0, 
-    float slam_timeout=3.0 , 
-    float cov_to_dist_max = 50.0) : 
+    bool do_restart  , 
+    bool publish_conf ,  
+    uint16_t min_track_points , 
+    uint16_t min_slam_points  , 
+    float track_timeout, 
+    float slam_timeout , 
+    float cov_to_dist_max ) : 
     publish_conf(publish_conf) , 
     do_restart(do_restart) , 
     track_timeout(track_timeout) ,  
@@ -102,7 +134,7 @@ OvDriftDetector::OvDriftDetector(
     slam_sub = nh.subscribe(slam_points_topic,1,&OvDriftDetector::process_slam_points,this) ;
     odom_sub = nh.subscribe(odom_topic,1,&OvDriftDetector::process_odom,this) ;
     if(publish_conf)
-        conf_pub = nh.advertise("tracker_confidence",10) ; 
+        conf_pub = nh.advertise<std_msgs::Float64>("tracker_confidence",10) ; 
     if(do_restart)
         reset_client = nh.serviceClient<ov_reset::RestartOv>("/ov_msckf/reset_ov") ; 
     

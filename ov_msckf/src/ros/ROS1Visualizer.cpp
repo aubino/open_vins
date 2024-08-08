@@ -167,7 +167,7 @@ bool ROS1Visualizer::reset(std::shared_ptr<ov_core::YamlParser> parser)
   parser->parse_external("relative_config_imu", "imu0", "rostopic", topic_imu);
   sub_imu = _nh->subscribe(topic_imu, 1000, &ROS1Visualizer::callback_inertial, this);
   PRINT_INFO("Re - subscribing to IMU: %s\n", topic_imu.c_str());
-  retur true ; 
+  return true ; 
 }
 
 bool ROS1Visualizer::ros_reset(ov_reset::RestartOv::Request& req  , ov_reset::RestartOv::Response& res)

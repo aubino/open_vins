@@ -1,3 +1,4 @@
+#pragma once 
 #include <ros/ros.h>
 #include <sensor_msgs/PointCloud2.h>
 #include <pcl-1.10/pcl/common/common.h>
@@ -7,6 +8,8 @@
 #include <Eigen/Core>
 #include <ov_reset/RestartOv.h>
 #include <std_msgs/Float64.h>
+#include <Eigen/Eigenvalues>
+#include <Eigen/Core> 
 #include <cmath>
 #include <deque>
 
@@ -43,47 +46,9 @@ class OvDriftDetector
         ros::ServiceClient reset_client ;   
         bool publish_conf , do_restart ; 
         float track_timeout , slam_timeout , cov_to_dist_max ; 
-        uint16_t min_track_points , min_track_points ; 
+        uint16_t min_track_points , min_slam_points ; 
         std::atomic<double> slam_conf  , track_conf , cov_conf , conf;
         std::string restart_cfg ;             
 } ; 
 
-// Function to extract standard deviations from odometry covariance
-std::pair<double, double> extract_std_dev(const nav_msgs::Odometry& odom) {
-    // Convert the covariance array to an Eigen matrix
-    Eigen::Matrix<double, 6, 6> covariance_matrix;
-    for (int i = 0; i < 6; ++i) {
-        for (int j = 0; j < 6; ++j) {
-            covariance_matrix(i, j) = odom.pose.covariance[i * 6 + j];
-        }
-    }
 
-    // Extract the 3x3 position covariance matrix
-    Eigen::Matrix3d position_covariance = covariance_matrix.block<3,3>(0, 0);
-
-    // Extract the 3x3 orientation covariance matrix
-    Eigen::Matrix3d orientation_covariance = covariance_matrix.block<3,3>(3, 3);
-
-    // Compute the eigenvalues for position covariance
-    Eigen::SelfAdjointEigenSolver<Eigen::Matrix3d> position_solver(position_covariance);
-    Eigen::Vector3d position_eigenvalues = position_solver.eigenvalues();
-
-    // Compute the eigenvalues for orientation covariance
-    Eigen::SelfAdjointEigenSolver<Eigen::Matrix3d> orientation_solver(orientation_covariance);
-    Eigen::Vector3d orientation_eigenvalues = orientation_solver.eigenvalues();
-
-    // Compute the standard deviations as the maximum square root of eigenvalues
-    double position_std_dev = position_eigenvalues.array().sqrt().maxCoeff();
-    double orientation_std_dev = orientation_eigenvalues.array().sqrt().maxCoeff();
-
-    // Return the standard deviations as a pair
-    return std::make_pair(position_std_dev, orientation_std_dev);
-}
-
-// Function to compute the hyperbolic tangent of x
-double tanh(double x) {
-    // Using the definition of tanh: tanh(x) = (e^x - e^-x) / (e^x + e^-x)
-    double e_pos = std::exp(x);  // e^x
-    double e_neg = std::exp(-x); // e^-x
-    return (e_pos - e_neg) / (e_pos + e_neg);
-}
