@@ -33,30 +33,54 @@ std::pair<double, double> extract_std_dev(const nav_msgs::Odometry& odom) {
 }
 
 
-void OvDriftDetector::process_track_points(const sensor_msgs::PointCloud2::ConstPtr& msg)
+void OvDriftDetector::process_track_points(const sensor_msgs::PointCloud::ConstPtr& cloud_msg)
 {
-    pcl::PCLPointCloud2 pcl_pc2;
-    pcl_conversions::toPCL(*msg, pcl_pc2);
-    pcl::PointCloud<pcl::PointXYZ> output ; 
-    pcl::fromPCLPointCloud2(pcl_pc2, output);
-    track_points_buffer.push_back(output) ; 
+    // Create a PCL point cloud object
+    pcl::PointCloud<pcl::PointXYZ> pcl_cloud;
+
+    // Iterate over each point in the sensor_msgs::PointCloud
+    for (size_t i = 0; i < cloud_msg->points.size(); ++i) {
+        pcl::PointXYZ point;
+        point.x = cloud_msg->points[i].x;
+        point.y = cloud_msg->points[i].y;
+        point.z = cloud_msg->points[i].z;
+        pcl_cloud.points.push_back(point);
+    }
+
+    // Set the width and height of the PCL cloud
+    pcl_cloud.width = pcl_cloud.points.size();
+    pcl_cloud.height = 1; // Unordered point cloud
+    pcl_cloud.is_dense = false;
+    pcl_cloud.header.stamp = ros::Time::now().toNSec() ; //cloud_msg->header.stamp.toNSec() ; 
+    track_points_buffer.push_back(pcl_cloud) ;
+    ROS_INFO("Tracking points size %d", pcl_cloud.size()) ;  
     while (!track_points_buffer.empty() && (ros::Time::now().toNSec() - track_points_buffer.front().header.stamp) > track_timeout * 1e9) {
             track_points_buffer.pop_front();
         }
-    uint res = 0  ; 
+    int res = 0  ; 
     for(const auto cloud :  track_points_buffer)
-        res += cloud.size() > min_track_points ; 
+        if(cloud.size() > min_track_points) 
+            res ++ ;  
     if(res == 0)
     {
         // Tracking point has been low for the past track_timeout senconds. Trigger reset
         ROS_INFO("Tracking points Lower than %d for the last %f seconds. ", min_track_points , track_timeout) ; 
         if(do_restart)
         {
-            ROS_INFO("Triggering reset") ; 
+            ROS_INFO("Triggering reset") ;
+            ov_reset::RestartOv req_data ; 
+            req_data.request.estimator_config_path = restart_cfg ; 
+            req_data.request.timeout = -1 ; 
+            if (reset_client.call(req_data)) {
+                ROS_INFO("Successfully called OvReset service");
+            } else {
+                ROS_ERROR("Failed to call OvReset service");
+            } 
         }
         track_conf = 0.0 ; 
     }
-    else track_conf = TRACK_B * tanh(TRACK_A * output.size()) ; 
+    else track_conf = TRACK_B * tanh(TRACK_A * pcl_cloud.size()) ;
+    ROS_INFO("Tracking confidance : %f",track_conf.load(std::memory_order::memory_order_acquire)) ;  
 }
 
 void OvDriftDetector::process_slam_points(const sensor_msgs::PointCloud2::ConstPtr& msg)
@@ -65,24 +89,38 @@ void OvDriftDetector::process_slam_points(const sensor_msgs::PointCloud2::ConstP
     pcl_conversions::toPCL(*msg, pcl_pc2);
     pcl::PointCloud<pcl::PointXYZ> output ; 
     pcl::fromPCLPointCloud2(pcl_pc2, output);
-    slam_points_buffer.push_back(output) ; 
-    while (!slam_points_buffer.empty() && (ros::Time::now().toNSec() - slam_points_buffer.front().header.stamp) > track_timeout * 1e9) {
+    ROS_INFO("Slam points size %d", output.size()) ;
+    output.header.stamp = msg->header.stamp.toNSec() ; 
+    slam_points_buffer.push_back(output) ;
+
+    while (!slam_points_buffer.empty() && (ros::Time::now().toNSec() - slam_points_buffer.front().header.stamp) > slam_timeout * 1e9) {
             slam_points_buffer.pop_front();
         }
-    uint res = 0  ; 
+    int res = 0  ; 
     for(const auto cloud :  slam_points_buffer)
-        res += cloud.size() > min_slam_points ; 
+        if(cloud.size() > min_slam_points) 
+            res ++ ;  
     if(res == 0)
     {
         // Tracking point has been low for the past track_timeout senconds. Trigger reset
         ROS_INFO("Slam points Lower than %d for the last %f seconds. ", min_track_points , track_timeout) ; 
         if(do_restart)
         {
-            ROS_INFO("Triggering reset") ; 
+            ROS_INFO("Triggering reset") ;
+            ov_reset::RestartOv req_data ; 
+            req_data.request.estimator_config_path = restart_cfg ; 
+            req_data.request.timeout = -1 ; 
+            if (reset_client.call(req_data)) {
+                ROS_INFO("Successfully called OvReset service");
+            } else {
+                ROS_ERROR("Failed to call OvReset service");
+            }
+             
         }
         slam_conf = 0.0 ; 
     }
-    else slam_conf = SLAM_B * tanh(SLAM_A * output.size()) ; 
+    else slam_conf = SLAM_B * tanh(SLAM_A * output.size()) ;
+    ROS_INFO("Slam confidance : %f",slam_conf.load(std::memory_order::memory_order_acquire)) ; 
 }
 
 void OvDriftDetector::process_odom(const nav_msgs::Odometry::ConstPtr& msg)
@@ -93,7 +131,7 @@ void OvDriftDetector::process_odom(const nav_msgs::Odometry::ConstPtr& msg)
                              msg->pose.pose.position.z * msg->pose.pose.position.z) ; 
     if((std_dev.first/dist) > cov_to_dist_max) 
     {
-        ROS_INFO("Normalized covariance greater than %f . Decreasin confidance sligntly if needed",cov_to_dist_max) ; 
+        ROS_INFO("Normalized covariance greater than %f . Decreasin confidance slightly if needed",cov_to_dist_max) ; 
         cov_conf = 0.0 ; 
     }
     if(publish_conf)
