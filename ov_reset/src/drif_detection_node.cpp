@@ -10,7 +10,8 @@ uint16_t default_min_track_points = 20 ;
 uint16_t default_min_slam_points = 8 ; 
 float default_track_timeout = 1.0 ; 
 float default_slam_timeout = 3.0 ; 
-float default_cov_to_dist_max = 0.025 ; 
+float default_cov_to_dist_max = 0.025 ;
+float default_min_buffer_time_width = 1.0 ; 
 
 
 int main(int argc , char** argv)
@@ -26,6 +27,7 @@ int main(int argc , char** argv)
     float track_timeout ; 
     float slam_timeout ;
     float cov_to_dist_max ;
+    float min_buffer_time_width ; 
     ros::init( argc ,  argv , "drift_detector_node") ; 
     ros::NodeHandle nh("~") ; 
     if(!nh.getParam("track_points_topic",track_points_topic)) { track_points_topic = default_track_points_topic ; }
@@ -39,6 +41,7 @@ int main(int argc , char** argv)
     if(!nh.getParam("track_timeout",track_timeout)) { track_timeout = default_track_timeout ; }
     if(!nh.getParam("slam_timeout",slam_timeout)) { slam_timeout = default_slam_timeout ; }
     if(!nh.getParam("cov_to_dist_max",cov_to_dist_max)) { cov_to_dist_max = default_cov_to_dist_max ; }
+    if(!nh.getParam("min_buffer_time_width",min_buffer_time_width)) { min_buffer_time_width = default_min_buffer_time_width ; }
     OvDriftDetector detector(nh,
                             track_points_topic,
                             slam_points_topic,
@@ -50,6 +53,7 @@ int main(int argc , char** argv)
                             min_slam_points,
                             track_timeout,
                             slam_timeout,
+                            min_buffer_time_width,
                             cov_to_dist_max) ; 
     ros::spin() ; 
 }

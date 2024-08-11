@@ -31,7 +31,8 @@ class OvDriftDetector
         OvDriftDetector(ros::NodeHandle nh ,  std::string track_points_topic , std::string slam_points_topic 
                         , std::string odom_topic, std::string restart_cfg , bool do_restart = false , 
                          bool publish_conf = false ,  uint16_t min_track_points = 40, uint16_t min_slam_points = 8 , 
-                        float track_timeout=3.0, float slam_timeout=3.0 , float cov_to_dist_max = 50.0 ) ;
+                        float track_timeout=3.0, float slam_timeout=3.0 , 
+                        float min_buffer_time_width = 1.0 , float cov_to_dist_max = 50.0 ) ;
         void process_track_points(const sensor_msgs::PointCloud::ConstPtr& msg) ;
         void process_slam_points(const sensor_msgs::PointCloud2::ConstPtr& msg) ; 
         void process_odom(const nav_msgs::Odometry::ConstPtr& msg) ; 
@@ -46,7 +47,8 @@ class OvDriftDetector
         ros::Publisher conf_pub ;
         ros::ServiceClient reset_client ;   
         bool publish_conf , do_restart ; 
-        float track_timeout , slam_timeout , cov_to_dist_max ; 
+        float track_timeout , slam_timeout , cov_to_dist_max ;
+        float min_buffer_time_width ;  
         uint16_t min_track_points , min_slam_points ; 
         std::atomic<double> slam_conf  , track_conf , cov_conf , conf;
         std::string restart_cfg ;             

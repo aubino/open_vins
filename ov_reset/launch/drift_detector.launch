@@ -12,19 +12,21 @@
     <arg name="track_timeout"      default="1.0" />
     <arg name="slam_timeout"      default="3.0" />
     <arg name="cov_to_dist_max"    default="0.2" />
+    <arg name="min_buffer_time_width" default="1.0"/>
 
     <!-- MASTER NODE! -->
     <node name="ov_reset" pkg="ov_reset" type="ov_reset_node" output="screen" clear_params="true" required="true">
-        <param name="track_points_topic"       type="str"    value="$(arg track_points_topic)" />
-        <param name="slam_points_topic"        type="str"     value="$(arg slam_points_topic)" />
-        <param name="odom_topic"               type="str"    value="$(arg odom_topic)" />
-        <param name="restart_cfg"               type="str"    value="$(arg restart_cfg)" />
-        <param name="do_restart"                type="bool"    value="$(arg do_restart)" />
-        <param name="publish_conf"                type="bool"   value="$(arg publish_conf)" />
-        <param name="min_track_points"               type="int"    value="$(arg min_track_points)" />
-        <param name="min_slam_points"     type="int"   value="$(arg min_slam_points)" />
-        <param name="track_timeout"    type="double"    value="$(arg track_timeout)" />
-        <param name="slam_timeout"    type="double"    value="$(arg track_timeout)" />
-        <param name="cov_to_dist_max"    type="double"    value="$(arg cov_to_dist_max)" />
+        <param name="track_points_topic"       type="str"       value="$(arg track_points_topic)" />
+        <param name="slam_points_topic"        type="str"       value="$(arg slam_points_topic)" />
+        <param name="odom_topic"               type="str"       value="$(arg odom_topic)" />
+        <param name="restart_cfg"              type="str"       value="$(arg restart_cfg)" />
+        <param name="do_restart"               type="bool"      value="$(arg do_restart)" />
+        <param name="publish_conf"             type="bool"      value="$(arg publish_conf)" />
+        <param name="min_track_points"         type="int"       value="$(arg min_track_points)" />
+        <param name="min_slam_points"          type="int"       value="$(arg min_slam_points)" />
+        <param name="track_timeout"            type="double"    value="$(arg track_timeout)" />
+        <param name="slam_timeout"             type="double"    value="$(arg track_timeout)" />
+        <param name="min_buffer_time_width"    type="double"    value="$(arg min_buffer_time_width)" />
+        <param name="cov_to_dist_max"          type="double"    value="$(arg cov_to_dist_max)" />
     </node>
 </launch>

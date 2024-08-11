@@ -62,7 +62,7 @@ void OvDriftDetector::process_track_points(const sensor_msgs::PointCloud::ConstP
         if(cloud.size() > min_track_points) 
             res ++ ;
     ROS_INFO("Slam time width :  %f",float((track_points_buffer.back().header.stamp - track_points_buffer.front().header.stamp)/1e9))  ;  
-    if(!track_points_buffer.empty() && (res == 0 && (track_points_buffer.back().header.stamp - track_points_buffer.front().header.stamp) > track_timeout * 1e9 * 0.5 ))
+    if(!track_points_buffer.empty() && (res == 0 && (track_points_buffer.back().header.stamp - track_points_buffer.front().header.stamp) > min_buffer_time_width * 1e9  ))
     {
         // Tracking point has been low for the past track_timeout senconds. Trigger reset
         ROS_INFO("Tracking points Lower than %d for the last %f seconds. ", min_track_points , track_timeout) ; 
@@ -102,7 +102,7 @@ void OvDriftDetector::process_slam_points(const sensor_msgs::PointCloud2::ConstP
         if(cloud.size() > min_slam_points) 
             res ++ ;
     ROS_INFO("Slam time width :  %f",float((slam_points_buffer.back().header.stamp - slam_points_buffer.front().header.stamp)/1e9))  ;  
-    if(!slam_points_buffer.empty() && (res == 0 && (slam_points_buffer.back().header.stamp - slam_points_buffer.front().header.stamp) > track_timeout * 1e9 * 0.5 ))
+    if(!slam_points_buffer.empty() && (res == 0 && (slam_points_buffer.back().header.stamp - slam_points_buffer.front().header.stamp) > min_buffer_time_width * 1e9  ))
     {
         // Tracking point has been low for the past track_timeout senconds. Trigger reset
         ROS_INFO("Slam points Lower than %d for the last %f seconds. ", min_track_points , track_timeout) ; 
@@ -155,7 +155,8 @@ OvDriftDetector::OvDriftDetector(
     uint16_t min_track_points , 
     uint16_t min_slam_points  , 
     float track_timeout, 
-    float slam_timeout , 
+    float slam_timeout ,
+    float min_buffer_time_width, 
     float cov_to_dist_max ) : 
     publish_conf(publish_conf) , 
     do_restart(do_restart) , 
@@ -163,7 +164,8 @@ OvDriftDetector::OvDriftDetector(
     slam_timeout(slam_timeout) , 
     cov_to_dist_max(cov_to_dist_max) , 
     min_track_points(min_track_points) , 
-    min_slam_points(min_slam_points) , 
+    min_slam_points(min_slam_points) ,
+    min_buffer_time_width(min_buffer_time_width), 
     restart_cfg(restart_cfg) , 
     slam_conf(0) , 
     track_conf(0),
