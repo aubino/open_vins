@@ -186,6 +186,9 @@ struct VioManagerOptions {
 
   // STATE DEFAULTS ==========================
 
+  /// Depthai sockets to use on each cameras
+  std::map<std::string, std::pair<std::string,std::string>> sockets ; 
+
   /// Gravity magnitude in the global frame (i.e. should be 9.81 typically)
   double gravity_mag = 9.81;
 
@@ -243,8 +246,14 @@ struct VioManagerOptions {
         // Distortion parameters
         std::vector<double> cam_calib1 = {1, 1, 0, 0};
         std::vector<double> cam_calib2 = {0, 0, 0, 0};
+        std::string dai_socket ;
+        std::string cam_topic ; 
         parser->parse_external("relative_config_imucam", "cam" + std::to_string(i), "intrinsics", cam_calib1);
         parser->parse_external("relative_config_imucam", "cam" + std::to_string(i), "distortion_coeffs", cam_calib2);
+        parser->parse_external("relative_config_imucam", "cam" + std::to_string(i), "dai_socket", dai_socket);
+        parser->parse_external("relative_config_imucam", "cam" + std::to_string(0), "rostopic", cam_topic);
+        sockets["cam" + std::to_string(i)] = std::make_pair(dai_socket,cam_topic) ; 
+        
         Eigen::VectorXd cam_calib = Eigen::VectorXd::Zero(8);
         cam_calib << cam_calib1.at(0), cam_calib1.at(1), cam_calib1.at(2), cam_calib1.at(3), cam_calib2.at(0), cam_calib2.at(1),
             cam_calib2.at(2), cam_calib2.at(3);
