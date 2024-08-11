@@ -252,7 +252,7 @@ struct VioManagerOptions {
         parser->parse_external("relative_config_imucam", "cam" + std::to_string(i), "distortion_coeffs", cam_calib2);
         parser->parse_external("relative_config_imucam", "cam" + std::to_string(i), "dai_socket", dai_socket);
         parser->parse_external("relative_config_imucam", "cam" + std::to_string(0), "rostopic", cam_topic);
-        sockets["cam" + std::to_string(i)] = std::make_pair(dai_socket,cam_topic) ; 
+        sockets["cam" + std::to_string(i)] = std::make_pair(dai_socket,cam_topic) ;   
         
         Eigen::VectorXd cam_calib = Eigen::VectorXd::Zero(8);
         cam_calib << cam_calib1.at(0), cam_calib1.at(1), cam_calib1.at(2), cam_calib1.at(3), cam_calib2.at(0), cam_calib2.at(1),
