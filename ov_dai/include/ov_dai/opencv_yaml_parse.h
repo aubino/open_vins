@@ -617,6 +617,38 @@ private:
   }
 };
 
+  template <class T>
+  void parse(const cv::FileNode &file_node, const std::string &node_name,const std::string &sensor_name,
+             T &node_result, bool required = true)
+  {
+    try 
+    {
+      parse(file_node[sensor_name],node_name,node_result,required)
+    } catch(...) {
+      PRINT_WARNING(YELLOW "unable to parse %s node of type [%s] in [%s] in the config file!\n" RESET, node_name.c_str(),
+                    typeid(node_result).name(), sensor_name.c_str());
+      all_params_found_successfully = false;
+    }
+  } ; 
+  template <class T>
+  void parse(const std::string &node_name,const std::string &sensor_name,
+             T &node_result, bool required = true)
+  {
+    if(config==nullptr)
+      PRINT_ERROR("Config file not loaded \n") ; 
+    else
+    {
+      try 
+      {
+        parse((*config)[sensor_name],node_name,node_result,required)
+      } catch(...) {
+        PRINT_WARNING(YELLOW "unable to parse %s node of type [%s] in [%s] in the config file!\n" RESET, node_name.c_str(),
+                    typeid(node_result).name(), sensor_name.c_str());
+        all_params_found_successfully = false;
+      }
+    }
+  } ; 
+
 } /* namespace ov_core */
 
 #endif /* OPENCV_YAML_PARSER_H */

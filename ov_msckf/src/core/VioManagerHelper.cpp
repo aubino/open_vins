@@ -470,3 +470,31 @@ std::vector<Eigen::Vector3d> VioManager::get_features_ARUCO() {
   }
   return aruco_feats;
 }
+
+std::vector<std::shared_ptr<ov_core::Feature>> VioManager::distribute_features_evenly( const std::vector<std::shared_ptr<ov_core::Feature>>& feats, int max_feats)  
+{
+  std::unordered_map<int, int> cam_id_count;  // Track occurrences of each anchor_cam_id
+  std::unordered_map<int, int> cam_id_needed; // Track how many of each anchor_cam_id are needed
+    std::vector<std::shared_ptr<Feature>> result;
+
+  // Count occurrences of each anchor_cam_id
+  for (const auto& feature : feats) {
+      cam_id_count[feature->anchor_cam_id]++;
+  }
+
+  // Determine how many of each anchor_cam_id should be selected
+  int total_features = feats.size();
+  for (const auto& pair : cam_id_count) {
+    cam_id_needed[pair.first] = (max_feats * pair.second + total_features - 1) / total_features;
+  }
+
+    // Select the features while maintaining the original order
+  for (const auto& feature : feats) {
+      if (cam_id_needed[feature->anchor_cam_id] > 0 && result.size() < max_feats) {
+          result.push_back(feature);
+          cam_id_needed[feature->anchor_cam_id]--;
+      }
+  }
+
+  return result;
+}

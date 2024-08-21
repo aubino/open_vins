@@ -143,7 +143,15 @@ public:
    * @param message Contains our timestamp, images, and camera ids
    * @return True if we have successfully initialized
    */
-  bool re_initialize(const ov_core::CameraData &message) ; 
+  bool re_initialize(const ov_core::CameraData &message) ;
+
+  /**
+   * @brief Helper function to distribute new slam features more evenly accross cameras
+   * @param feats Contains the features pool to select from
+   * @param max_feats Number of features to select from
+   * @return Alist of selected features.
+   */
+  std::vector<std::shared_ptr<ov_core::Feature>> distribute_features_evenly( const std::vector<std::shared_ptr<ov_core::Feature>>& feats, int max_feats) ;  
 
 protected:
   /**

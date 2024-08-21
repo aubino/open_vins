@@ -447,7 +447,9 @@ void VioManager::do_feature_propagate_update(const ov_core::CameraData &message)
     // If we have at least 1 that we can add, lets add it!
     // Note: we remove them from the feat_marg array since we don't want to reuse information...
     if (valid_amount > 0) {
-      feats_slam.insert(feats_slam.end(), feats_maxtracks.end() - valid_amount, feats_maxtracks.end());
+      auto selected_features = VioManager::distribute_features_evenly(feats_maxtracks,valid_amount) ; 
+      //feats_slam.insert(feats_slam.end(), feats_maxtracks.end() - valid_amount, feats_maxtracks.end());
+      feats_slam.insert(feats_slam.end(), selected_features.begin() , selected_features.end());
       feats_maxtracks.erase(feats_maxtracks.end() - valid_amount, feats_maxtracks.end());
     }
   }
