@@ -20,16 +20,39 @@ class trackerBuilder
         trackerBuilder(std::string config_path,std::shared_ptr<ros::NodeHandle> pnh,ov_dai::YamlParser parser) : 
         _config_path(config_path) , 
         _nh(pnh) , 
-        parser(parser)
+        parser(parser),
+        frame_consuming_list({false})
         {
 
         };
+        void setupRos() 
+        {
+            auto r = build_pipeline_links(_pipeline) ; 
+            for(size_t i =0 ; i<r.size() ; i++ )
+            {
+                auto q_pair = r[i] ; 
+                q_pair.second->addCallback([&](std::shared_ptr<dai::ADatatype> data )
+                {
+                    using namespace std;
+                    using namespace std::chrono ;
+                    using namespace std::chrono_literals ; 
+                    auto tracked_data = std::dynamic_pointer_cast<dai::TrackedFeatures>(data);
+                    if(tracked_data)
+                    {
+                        std::this_thread::sleep_for(1ms) ; 
+                        
+                    }
+                }) ;  
+            }
+        }
         std::shared_ptr<dai::Pipeline> _pipeline ; 
         std::shared_ptr<ros::NodeHandle> _nh ; 
         std::string _config_path ;
         std::vector<std::atomic_bool> frame_consuming_list ;
+        std::vector<sensor_msgs::Image> image_list ; 
         ov_dai::YamlParser parser ;
         ov_dai::CamerasTrackerFactory f ;   
+        std::vector<ros::Publisher> dataPublishers ; 
     private : 
         std::vector<std::pair<std::shared_ptr<dai::DataOutputQueue>,std::shared_ptr<dai::DataOutputQueue>>> build_pipeline_links(std::shared_ptr<dai::Pipeline> pipeline)
         {
