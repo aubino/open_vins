@@ -31,18 +31,23 @@ class trackerBuilder
             for(size_t i =0 ; i<r.size() ; i++ )
             {
                 auto q_pair = r[i] ; 
-                q_pair.second->addCallback([&](std::shared_ptr<dai::ADatatype> data )
-                {
-                    using namespace std;
-                    using namespace std::chrono ;
-                    using namespace std::chrono_literals ; 
-                    auto tracked_data = std::dynamic_pointer_cast<dai::TrackedFeatures>(data);
-                    if(tracked_data)
-                    {
-                        std::this_thread::sleep_for(1ms) ; 
-                        
-                    }
-                }) ;  
+                dai::rosBridge::TrackedFeaturesConverter featConverter("cam" + std::to_string(i) + "_camera_optical_frame", true);
+                dai::rosBridge::BridgePublisher<depthai_ros_msgs::msg::TrackedFeatures, dai::TrackedFeatures> featuresPub(
+                    q_pair.second,
+                    *_nh,
+                    std::string("features_cam") + std::to_string(i),
+                    std::bind(&dai::rosBridge::TrackedFeaturesConverter::toRosMsg, &featConverter, std::placeholders::_1, std::placeholders::_2),
+                    2);
+                featuresPub.addPublisherCallback() ; 
+                features_publishers.push_back(featuresPub) ; 
+                dai::rosBridge::ImageConverter img_converter("cam" + std::to_string(i) + "_camera_optical_frame", true) ; 
+                dai::rosBridge::BridgePublisher<sensor_msgs::Image,dai::ImgFrame> imgPub(q_pair.first,
+                    *_nh,
+                    std::string("image_cam") + std::to_string(i),
+                    std::bind(&dai::rosBridge::SpatialDetectionConverter::toRosMsg, &img_converter, std::placeholders::_1, std::placeholders::_2),
+                    10) ; 
+                imgPub.addPublisherCallback() ; 
+                image_publishers.push_back(imgPub) ; 
             }
         }
         std::shared_ptr<dai::Pipeline> _pipeline ; 
@@ -51,7 +56,9 @@ class trackerBuilder
         std::vector<std::atomic_bool> frame_consuming_list ;
         std::vector<sensor_msgs::Image> image_list ; 
         ov_dai::YamlParser parser ;
-        ov_dai::CamerasTrackerFactory f ;   
+        ov_dai::CamerasTrackerFactory f ; 
+        std::vector<dai::rosBridge::BridgePublisher<sensor_msgs::Image,dai::ImgFrame>> image_publishers ; 
+        std::vector<dai::rosBridge::BridgePublisher<depthai_ros_msgs::msg::TrackedFeatures, dai::TrackedFeatures>> features_publishers ;   
         std::vector<ros::Publisher> dataPublishers ; 
     private : 
         std::vector<std::pair<std::shared_ptr<dai::DataOutputQueue>,std::shared_ptr<dai::DataOutputQueue>>> build_pipeline_links(std::shared_ptr<dai::Pipeline> pipeline)
@@ -95,4 +102,27 @@ class trackerBuilder
             return result ; 
         } ; 
 } ; 
+
+class externalTrackerBuilder
+{
+    private : 
+        std::shared_ptr<dai::Pipeline> _pipeline ; 
+        std::shared_ptr<ros::NodeHandle> _nh ; 
+        std::string _config_path ;
+        ov_dai::YamlParser parser ;
+        ov_dai::CamerasTrackerFactory f ; 
+        std::vector<ros::Subscriber> dataSubscriber ; 
+        std::vector<dai::DataInputQueue> device_input_queues ; 
+} ; 
+
+int main(int argc, char**  argv)
+{
+    ros::init(argc,argv) ; 
+    auto pnh = std::make_shared<ros::NodeHandle>("~") ; 
+    bool upload = false ; 
+    std::string config_path = "" ; 
+    pnh->getParam("upload",upload,false) ; 
+    pnh->getParam("config_path",config_path) ; 
+
+}
 

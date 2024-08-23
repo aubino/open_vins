@@ -140,7 +140,7 @@ struct CamerasTrackerFactory {
         TrackerOptions t ; 
         parser->parse("socket","cam" + std::to_string(size_t),t.socket) ; 
         parser->parse("topic","cam" + std::to_string(size_t), t.topic) ;
-        parser->parse("topic_in","cam" + std::to_string(size_t),t.topic_in) ;
+        parser->parse("topic_in","cam" + std::to_string(size_t),t.topic_in,false) ;
         parser->parse("upload","cam" + std::to_string(size_t),t.upload) ;
         parser->parse("framerate","cam" + std::to_string(size_t),t.framerate) ;
         parser->parse("resolution","cam" + std::to_string(size_t),t.resolution) ;
