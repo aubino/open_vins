@@ -620,6 +620,26 @@ void ROS1Visualizer::callback_stereo(const sensor_msgs::ImageConstPtr &msg0, con
   std::sort(camera_queue.begin(), camera_queue.end());
 }
 
+void ROS1Visualizer::callback_sync(const ov_dai::syncCameras::ConstPtr msg)
+{
+  double timestamp = msg0->header.stamp.toSec();
+  double time_delta = 1.0 / _app->get_params().track_frequency;
+  int cam_id0 ; 
+  for(uint8_t id : msg->indexes)
+    if(id < _app->get_params().state_options.num_cameras )
+    {
+      cam_id = id ;  
+      break;
+    }
+  
+  if (camera_last_timestamp.find(cam_id) != camera_last_timestamp.end() && timestamp < camera_last_timestamp.at(cam_id) + time_delta) {
+    return;
+  }
+  for(uint8_t id : msg->indexes)
+    camera_last_timestamp[id] = timestamp;
+  
+}
+
 void ROS1Visualizer::publish_state() {
 
   // Get the current state

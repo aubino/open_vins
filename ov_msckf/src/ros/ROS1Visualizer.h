@@ -51,6 +51,7 @@
 #include <boost/filesystem.hpp>
 #include <cv_bridge/cv_bridge.h>
 #include <ov_reset/RestartOv.h>
+#include <ov_dai/syncCameras.h>
 
 namespace ov_core {
 class YamlParser;
@@ -122,6 +123,9 @@ public:
 
   /// Callback for synchronized stereo camera information
   void callback_stereo(const sensor_msgs::ImageConstPtr &msg0, const sensor_msgs::ImageConstPtr &msg1, int cam_id0, int cam_id1);
+
+  /// Callback for synchronized multi cameras
+  void callback_sync(const ov_dai::syncCameras::ConstPtr msg) ; 
 
 protected:
   /// Publish the current state
