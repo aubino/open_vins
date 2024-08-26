@@ -31,21 +31,21 @@ class trackerBuilder
             {
                 auto q_pair = r[i] ; 
                 dai::rosBridge::TrackedFeaturesConverter featConverter("cam" + std::to_string(i) + "_camera_optical_frame", true);
-                dai::rosBridge::BridgePublisher<depthai_ros_msgs::TrackedFeatures, dai::TrackedFeatures> featuresPub(
-                    q_pair.second,
-                    *_nh,
-                    f.tracker_option_list[i].topic + std::string("/features") ,
-                    std::bind(&dai::rosBridge::TrackedFeaturesConverter::toRosMsg, &featConverter, std::placeholders::_1, std::placeholders::_2),
-                    2);
-                featuresPub.addPublisherCallback() ; 
+                auto featuresPub = std::make_shared<dai::rosBridge::BridgePublisher<depthai_ros_msgs::TrackedFeatures, dai::TrackedFeatures>>(
+                     q_pair.second,
+                     *_nh,
+                     f.tracker_option_list[i].topic + std::string("/features") ,
+                     std::bind(&dai::rosBridge::TrackedFeaturesConverter::toRosMsg, &featConverter, std::placeholders::_1, std::placeholders::_2),
+                     2);
+                 featuresPub->addPublisherCallback() ; 
                 features_publishers.push_back(featuresPub) ; 
                 dai::rosBridge::ImageConverter img_converter("cam" + std::to_string(i) + "_camera_optical_frame", true) ; 
-                dai::rosBridge::BridgePublisher<sensor_msgs::Image,dai::ImgFrame> imgPub(q_pair.first,
-                    *_nh,
-                    f.tracker_option_list[i].topic,
-                    std::bind(&dai::rosBridge::ImageConverter::toRosMsg, &img_converter, std::placeholders::_1, std::placeholders::_2),
-                    10) ; 
-                imgPub.addPublisherCallback() ; 
+                auto imgPub = std::make_shared<dai::rosBridge::BridgePublisher<sensor_msgs::Image,dai::ImgFrame>>(q_pair.first,
+                     *_nh,
+                     f.tracker_option_list[i].topic,
+                     std::bind(&dai::rosBridge::ImageConverter::toRosMsg, &img_converter, std::placeholders::_1, std::placeholders::_2),
+                     10) ; 
+                imgPub->addPublisherCallback() ; 
                 image_publishers.push_back(imgPub) ; 
             }
         }
@@ -56,8 +56,8 @@ class trackerBuilder
         std::vector<sensor_msgs::Image> image_list ; 
         std::shared_ptr<ov_dai::YamlParser> parser ;
         ov_dai::CamerasTrackerFactory f ; 
-        std::vector<dai::rosBridge::BridgePublisher<sensor_msgs::Image,dai::ImgFrame>> image_publishers ; 
-        std::vector<dai::rosBridge::BridgePublisher<depthai_ros_msgs::TrackedFeatures, dai::TrackedFeatures>> features_publishers ;   
+        std::vector<std::shared_ptr<dai::rosBridge::BridgePublisher<sensor_msgs::Image,dai::ImgFrame>>> image_publishers ; 
+        std::vector<std::shared_ptr<dai::rosBridge::BridgePublisher<depthai_ros_msgs::TrackedFeatures, dai::TrackedFeatures>>> features_publishers ;   
         std::vector<ros::Publisher> dataPublishers ; 
     private : 
         std::vector<std::pair<std::shared_ptr<dai::DataOutputQueue>,std::shared_ptr<dai::DataOutputQueue>>> build_pipeline_links(std::shared_ptr<dai::Pipeline> pipeline)
@@ -95,7 +95,7 @@ class trackerBuilder
                 trackers[i]->passthroughInputImage.link(p_out->input) ;
                 trackers[i]->outputFeatures.link(f_out->input) ;  
             }
-            device = std::make_shared<dai::Device>(pipeline); 
+            device = std::make_shared<dai::Device>(*pipeline); 
             std::vector<std::pair<std::shared_ptr<dai::DataOutputQueue>,std::shared_ptr<dai::DataOutputQueue>>> result ; 
             for(size_t i =0 ; i<trackers.size() ; i++)
                 result.push_back(std::make_pair(device->getOutputQueue("passthrough"+ std::to_string(i), 2, false),device->getOutputQueue("features"+ std::to_string(i), 2, false))) ; 
@@ -149,7 +149,7 @@ class externalTrackerBuilder
                 device_input_nodes.push_back(link_in) ; 
                 device_output_nodes.push_back(link_out) ; 
             }
-            device = std::make_shared<dai::Device>(pipeline);
+            device = std::make_shared<dai::Device>(*pipeline);
             std::vector<std::shared_ptr<dai::DataOutputQueue>> result ; 
             for(size_t i =0 ; i<trackers.size() ; i++)
                 result.push_back(device->getOutputQueue("features"+ std::to_string(i), 2, false)) ; 

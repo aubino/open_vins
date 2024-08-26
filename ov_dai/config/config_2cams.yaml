@@ -1,0 +1,34 @@
+#%YAML:1.0 # need to specify the file type at the top!
+
+max_cameras: 2 
+
+cam0: 
+  socket: "A"
+  topic: "/ffc_inertial_node/camA"
+  topic_in: "/ffc_inertial_node/camA"
+  upload: false 
+  framerate: 20
+  resolution: "400p"
+  num_points: 200
+  fast_threshold: 20.0
+  grid_x: 4 
+  grid_y: 4
+  knn_ratio: 0.70
+  use_klt: true
+  min_px_dist: 15
+
+cam1: 
+  socket: "B"
+  topic: "/ffc_inertial_node/camB"
+  topic_in: "/ffc_inertial_node/camB"
+  upload: false 
+  framerate: 20
+  resolution: "400p"
+  num_points: 200
+  fast_threshold: 20.0
+  grid_x: 4 
+  grid_y: 4
+  knn_ratio: 0.70
+  use_klt: true
+  min_px_dist: 15
+

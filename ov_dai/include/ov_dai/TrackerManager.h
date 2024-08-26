@@ -136,7 +136,9 @@ struct CamerasTrackerFactory {
    */
   void print_and_load_trackers(const std::shared_ptr<ov_dai::YamlParser> &parser = nullptr) {
     if (parser != nullptr) {
-      parser->parse_config("max_cameras",max_cameras) ;  
+      int _max_cameras = 0  ; 
+      parser->parse_config("max_cameras",_max_cameras) ;
+      max_cameras = (size_t) _max_cameras ;   
       for(size_t i = 0 ; i<max_cameras ; i++)
       {
         //std::string socket , rostopic , rostopic_in , resolution ;
@@ -147,13 +149,19 @@ struct CamerasTrackerFactory {
         parser->parse("upload","cam" + std::to_string(i),t.upload) ;
         parser->parse("framerate","cam" + std::to_string(i),t.framerate) ;
         parser->parse("resolution","cam" + std::to_string(i),t.resolution) ;
-        parser->parse("num_points","cam" + std::to_string(i),t.num_points) ;
+        int _num_points = 0  ; 
+        parser->parse("num_points","cam" + std::to_string(i),_num_points) ;
+        t.num_points = (size_t)_num_points ; 
         parser->parse("fast_threshold","cam" + std::to_string(i),t.fast_threshold) ;
-        parser->parse("grid_x","cam" + std::to_string(i),t.grid_x) ;
-        parser->parse("grid_y","cam" + std::to_string(i),t.grid_y) ;
+        int _grid_x , _grid_y ; 
+        parser->parse("grid_x","cam" + std::to_string(i),_grid_x) ;
+        parser->parse("grid_y","cam" + std::to_string(i),_grid_y) ;
+        t.grid_x = (size_t)_grid_x ; t.grid_y = (size_t)_grid_y ; 
         parser->parse("use_klt","cam" + std::to_string(i),t.use_klt) ;
         parser->parse("knn_ratio","cam" + std::to_string(i),t.knn_ratio) ;
-        parser->parse("min_px_dist","cam" + std::to_string(i),t.min_px_dist) ;
+        int _min_px_dist ; 
+        parser->parse("min_px_dist","cam" + std::to_string(i),_min_px_dist) ;
+        t.min_px_dist = (size_t)_min_px_dist ; 
         tracker_option_list.push_back(t) ; 
       }
     }
