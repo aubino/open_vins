@@ -1,3 +1,3 @@
-std_msgs/Header Header
+std_msgs/Header header
 sensor_msgs/Image[] images
 std_msgs/UInt8[] indexes

@@ -1,2 +1,2 @@
-depthai_ros_msgs/TrackedFeatures
+depthai_ros_msgs/TrackedFeatures features
 sensor_msgs/Image image

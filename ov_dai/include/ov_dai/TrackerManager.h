@@ -32,21 +32,49 @@
 #include "opencv_yaml_parse.h"
 
 namespace ov_dai {
+  const std::map <std::string, dai::MonoCameraProperties::SensorResolution> sensor_resolution_map {{"400p" , dai::MonoCameraProperties::SensorResolution::THE_400_P},
+                                                                                                    {"720p" , dai::MonoCameraProperties::SensorResolution::THE_720_P},
+                                                                                                    {"800p" , dai::MonoCameraProperties::SensorResolution::THE_800_P},
+                                                                                                    {"480p" , dai::MonoCameraProperties::SensorResolution::THE_480_P},
+                                                                                                    {"1200p" , dai::MonoCameraProperties::SensorResolution::THE_1200_P}} ; 
+  
+  const std::map<std::string,dai::CameraBoardSocket> socket_map_list {{"a" , dai::CameraBoardSocket::CAM_A},
+                                                                      {"b" , dai::CameraBoardSocket::CAM_B},
+                                                                      {"c" , dai::CameraBoardSocket::CAM_C},
+                                                                      {"d" , dai::CameraBoardSocket::CAM_D},
+                                                                      {"e" , dai::CameraBoardSocket::CAM_E},
+                                                                      {"f" , dai::CameraBoardSocket::CAM_F},
+                                                                      {"g" , dai::CameraBoardSocket::CAM_G},
+                                                                      {"h" , dai::CameraBoardSocket::CAM_H},
+                                                                      {"i" , dai::CameraBoardSocket::CAM_I},
+                                                                      {"j" , dai::CameraBoardSocket::CAM_J},
+                                                                      {"A" , dai::CameraBoardSocket::CAM_A},
+                                                                      {"B" , dai::CameraBoardSocket::CAM_B},
+                                                                      {"C" , dai::CameraBoardSocket::CAM_C},
+                                                                      {"D" , dai::CameraBoardSocket::CAM_D},
+                                                                      {"E" , dai::CameraBoardSocket::CAM_E},
+                                                                      {"F" , dai::CameraBoardSocket::CAM_F},
+                                                                      {"G" , dai::CameraBoardSocket::CAM_G},
+                                                                      {"H" , dai::CameraBoardSocket::CAM_H},
+                                                                      {"I" , dai::CameraBoardSocket::CAM_I},
+                                                                      {"J" , dai::CameraBoardSocket::CAM_J}} ; 
+  
   struct TrackerOptions
-  {
-    std::string socket ; 
-    std::string topic ;
-    std::string topic_in ; 
-    bool upload ;  
-    double framerate ; 
-    std::string resolution ;
-    size_t num_points ;
-    double fast_threshold ; 
-    size_t grid_x , grid_y ; 
-    bool use_klt ; 
-    double knn_ratio ; 
-    size_t min_px_dist ;  
-  }
+  { 
+    public : 
+      std::string socket ; 
+      std::string topic ;
+      std::string topic_in ; 
+      bool upload ;  
+      double framerate ; 
+      std::string resolution ;
+      size_t num_points ;
+      double fast_threshold ; 
+      size_t grid_x , grid_y ; 
+      bool use_klt ; 
+      double knn_ratio ; 
+      size_t min_px_dist ;  
+  } ; 
 
 /**
  * @brief Struct which stores all options needed for state estimation.
@@ -66,55 +94,30 @@ struct CamerasTrackerFactory {
   }
 
   // ESTIMATOR ===============================
-  size_t max_cameras
-  const std::map<std::string,dai::CameraBoardSocket> socket_map_list {{"a" : dai::CameraBoardSocket::CAM_A},
-                                                                      {"b" : dai::CameraBoardSocket::CAM_B},
-                                                                      {"c" : dai::CameraBoardSocket::CAM_C},
-                                                                      {"d" : dai::CameraBoardSocket::CAM_D},
-                                                                      {"e" : dai::CameraBoardSocket::CAM_E},
-                                                                      {"f" : dai::CameraBoardSocket::CAM_F},
-                                                                      {"g" : dai::CameraBoardSocket::CAM_G},
-                                                                      {"h" : dai::CameraBoardSocket::CAM_H},
-                                                                      {"i" : dai::CameraBoardSocket::CAM_I},
-                                                                      {"j" : dai::CameraBoardSocket::CAM_J},
-                                                                      {"A" : dai::CameraBoardSocket::CAM_A},
-                                                                      {"B" : dai::CameraBoardSocket::CAM_B},
-                                                                      {"C" : dai::CameraBoardSocket::CAM_C},
-                                                                      {"D" : dai::CameraBoardSocket::CAM_D},
-                                                                      {"E" : dai::CameraBoardSocket::CAM_E},
-                                                                      {"F" : dai::CameraBoardSocket::CAM_F},
-                                                                      {"G" : dai::CameraBoardSocket::CAM_G},
-                                                                      {"H" : dai::CameraBoardSocket::CAM_H},
-                                                                      {"I" : dai::CameraBoardSocket::CAM_I},
-                                                                      {"J" : dai::CameraBoardSocket::CAM_J}} ; 
+  size_t max_cameras ;
   
-
-  const std::map <std::string, dai::MonoCameraProperties::SensorResolution> sensor_resolution_map {{"400p" : dai::MonoCameraProperties::SensorResolution::THE_400_P},
-                                                                                                    {"720p" : dai::MonoCameraProperties::SensorResolution::THE_720_P},
-                                                                                                    {"800p" : dai::MonoCameraProperties::SensorResolution::THE_800_P},
-                                                                                                    {"480p" : dai::MonoCameraProperties::SensorResolution::THE_480_P},
-                                                                                                    {"1200p" : dai::MonoCameraProperties::SensorResolution::THE_1200_P}} ; 
   /// Depthai sockets to use on each cameras
   std::vector<TrackerOptions> tracker_option_list ; 
 
   /**
    * @brief Function to convert tracker config files into node 
    */
-  std::vector<dai::node::FeatureTracker> createTrackers( std::shared_ptr<dai::Pipeline> pipeline )
+  std::vector<std::shared_ptr<dai::node::FeatureTracker>> createTrackers( std::shared_ptr<dai::Pipeline> pipeline )
   {
     
     auto numShaves = 2;
     auto numMemorySlices = 2;
-    std::vector<dai::node::FeatureTracker> trackers ; 
+    std::vector<std::shared_ptr<dai::node::FeatureTracker>> trackers ; 
     for(size_t i=0 ; i < max_cameras ;  i++ )
     {
       auto featureTracker = pipeline->create<dai::node::FeatureTracker>();
       featureTracker->setHardwareResources(numShaves,numMemorySlices) ;
-      featureTracker->setNumTargetFeatures( tracker_option_list[i].num_points) ;
-      featureTracker->setMotionEstimator(dai::FeatureTrackerConfig::MotionEstimator::Type::LUCAS_KANADE_OPTICAL_FLOW) ;
-      featureTracker->setFeatureMaintainer(true) ;
+      // featureTracker->setNumTargetFeatures( tracker_option_list[i].num_points) ;
+      // featureTracker->setMotionEstimator(dai::FeatureTrackerConfig::MotionEstimator::Type::LUCAS_KANADE_OPTICAL_FLOW) ;
+      // featureTracker->setFeatureMaintainer(true) ;
       dai::RawFeatureTrackerConfig::CornerDetector corner_detector ; 
-      corner_detector.cellGridDimension = std::min{std::max({tracker_option_list[i].grid_x,tracker_option_list[i].grid_y}),4} ; 
+      auto max_gird = std::max({tracker_option_list[i].grid_x,tracker_option_list[i].grid_y}) ; 
+      corner_detector.cellGridDimension = int32_t(std::min({max_gird,(size_t) (4) })) ; 
       corner_detector.type = dai::RawFeatureTrackerConfig::CornerDetector::Type::SHI_THOMASI  ; 
       //corner_detector.thresholds.initialValue
       featureTracker->initialConfig.setCornerDetector(corner_detector) ;
@@ -138,19 +141,19 @@ struct CamerasTrackerFactory {
       {
         //std::string socket , rostopic , rostopic_in , resolution ;
         TrackerOptions t ; 
-        parser->parse("socket","cam" + std::to_string(size_t),t.socket) ; 
-        parser->parse("topic","cam" + std::to_string(size_t), t.topic) ;
-        parser->parse("topic_in","cam" + std::to_string(size_t),t.topic_in,false) ;
-        parser->parse("upload","cam" + std::to_string(size_t),t.upload) ;
-        parser->parse("framerate","cam" + std::to_string(size_t),t.framerate) ;
-        parser->parse("resolution","cam" + std::to_string(size_t),t.resolution) ;
-        parser->parse("num_points","cam" + std::to_string(size_t),t.num_points) ;
-        parser->parse("fast_threshold","cam" + std::to_string(size_t),t.fast_threshold) ;
-        parser->parse("grid_x","cam" + std::to_string(size_t),t.grid_x) ;
-        parser->parse("grid_y","cam" + std::to_string(size_t),t.grid_y) ;
-        parser->parse("use_klt","cam" + std::to_string(size_t),t.use_klt) ;
-        parser->parse("knn_ratio","cam" + std::to_string(size_t),t.knn_ratio) ;
-        parser->parse("min_px_dist","cam" + std::to_string(size_t),t.min_px_dist) ;
+        parser->parse("socket","cam" + std::to_string(i),t.socket) ; 
+        parser->parse("topic","cam" + std::to_string(i), t.topic) ;
+        parser->parse("topic_in","cam" + std::to_string(i),t.topic_in,false) ;
+        parser->parse("upload","cam" + std::to_string(i),t.upload) ;
+        parser->parse("framerate","cam" + std::to_string(i),t.framerate) ;
+        parser->parse("resolution","cam" + std::to_string(i),t.resolution) ;
+        parser->parse("num_points","cam" + std::to_string(i),t.num_points) ;
+        parser->parse("fast_threshold","cam" + std::to_string(i),t.fast_threshold) ;
+        parser->parse("grid_x","cam" + std::to_string(i),t.grid_x) ;
+        parser->parse("grid_y","cam" + std::to_string(i),t.grid_y) ;
+        parser->parse("use_klt","cam" + std::to_string(i),t.use_klt) ;
+        parser->parse("knn_ratio","cam" + std::to_string(i),t.knn_ratio) ;
+        parser->parse("min_px_dist","cam" + std::to_string(i),t.min_px_dist) ;
         tracker_option_list.push_back(t) ; 
       }
     }
