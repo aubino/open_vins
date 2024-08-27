@@ -192,6 +192,15 @@ void ROS1Visualizer::setup_subscribers(std::shared_ptr<ov_core::YamlParser> pars
   sub_imu = _nh->subscribe(topic_imu, 1000, &ROS1Visualizer::callback_inertial, this);
   PRINT_INFO("subscribing to IMU: %s\n", topic_imu.c_str());
 
+  // If we have a synch topic we will set it up then exit
+  if(_app->get_params().dai_sync)
+  {
+    std::string dai_sync_topic ; 
+    _nh->param<std::string>("dai_sync_topic", dai_sync_topic, "/ffc/sync_images");
+    dai_sync_topic = _app->get_params().camera_sync_topic ; 
+    dai_sync_cam = _nh->subscribe(dai_sync_topic, 4, &ROS1Visualizer::callback_sync, this) ; 
+    return ; 
+  }
   // Logic for sync stereo subscriber
   // https://answers.ros.org/question/96346/subscribe-to-two-image_raws-with-one-function/?answer=96491#post-id-96491
   if (_app->get_params().state_options.num_cameras == 2) {
@@ -498,7 +507,7 @@ void ROS1Visualizer::callback_inertial(const sensor_msgs::Imu::ConstPtr &msg) {
     // If we do not have enough unique cameras then we need to wait
     // We should wait till we have one of each camera to ensure we propagate in the correct order
     auto params = _app->get_params();
-    size_t num_unique_cameras = (params.state_options.num_cameras == 2) ? 1 : params.state_options.num_cameras;
+    size_t num_unique_cameras = (params.state_options.num_cameras == 2 || params.dai_sync ) ? 1 : params.state_options.num_cameras;
     if (unique_cam_ids.size() == num_unique_cameras) {
 
       // Loop through our queue and see if we are able to process any of our camera measurements
@@ -622,22 +631,49 @@ void ROS1Visualizer::callback_stereo(const sensor_msgs::ImageConstPtr &msg0, con
 
 void ROS1Visualizer::callback_sync(const ov_dai::syncCameras::ConstPtr msg)
 {
-  double timestamp = msg0->header.stamp.toSec();
+  ROS_ASSERT(msg->images.size() == msg->indexes.size()) ;
+  double timestamp = msg->header.stamp.toSec();
   double time_delta = 1.0 / _app->get_params().track_frequency;
-  int cam_id0 ; 
-  for(uint8_t id : msg->indexes)
-    if(id < _app->get_params().state_options.num_cameras )
+  int cam_id = 0 ; 
+  for(auto id : msg->indexes)
+    if(id.data < _app->get_params().state_options.num_cameras )
     {
-      cam_id = id ;  
+      cam_id = id.data ;  
       break;
     }
   
   if (camera_last_timestamp.find(cam_id) != camera_last_timestamp.end() && timestamp < camera_last_timestamp.at(cam_id) + time_delta) {
     return;
   }
-  for(uint8_t id : msg->indexes)
-    camera_last_timestamp[id] = timestamp;
-  
+  for(auto id : msg->indexes)
+    camera_last_timestamp[id.data] = timestamp;
+
+  std::vector<cv_bridge::CvImagePtr > cv_ptrs ; 
+
+  for(size_t i = 0 ;  i< msg->images.size() ; i++)
+  {
+    try {
+      cv_ptrs.push_back(cv_bridge::toCvCopy(msg->images[i], sensor_msgs::image_encodings::MONO8));
+    } catch (cv_bridge::Exception &e) {
+      PRINT_ERROR("cv_bridge exception at image %d : %s\n", i ,e.what());
+      return;
+    }
+  }
+  ov_core::CameraData message;
+  message.timestamp = msg->header.stamp.toSec();
+  for(size_t i = 0 ;  i< msg->images.size() ; i++)
+  {
+    message.sensor_ids.push_back((int)msg->indexes[i].data);
+    message.images.push_back(cv_ptrs[i]->image.clone());
+    if (_app->get_params().use_mask)
+      message.masks.push_back(_app->get_params().masks.at((size_t)msg->indexes[i].data));
+    else 
+      message.masks.push_back(cv::Mat::zeros(cv_ptrs[i]->image.rows, cv_ptrs[i]->image.cols, CV_8UC1));
+  }
+  // append it to our queue of images
+  std::lock_guard<std::mutex> lck(camera_queue_mtx);
+  camera_queue.push_back(message);
+  std::sort(camera_queue.begin(), camera_queue.end());
 }
 
 void ROS1Visualizer::publish_state() {

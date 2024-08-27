@@ -166,6 +166,7 @@ protected:
   typedef message_filters::sync_policies::ApproximateTime<sensor_msgs::Image, sensor_msgs::Image> sync_pol;
   std::vector<std::shared_ptr<message_filters::Synchronizer<sync_pol>>> sync_cam;
   std::vector<std::shared_ptr<message_filters::Subscriber<sensor_msgs::Image>>> sync_subs_cam;
+  ros::Subscriber dai_sync_cam ; 
 
   // For path viz
   unsigned int poses_seq_imu = 0;
