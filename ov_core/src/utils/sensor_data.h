@@ -29,6 +29,15 @@
 namespace ov_core {
 
 /**
+ * @brief Struct for a Tracked keypoint  used by Externaltracker
+ */
+typedef struct TrackedFeature
+{
+    cv::Point2f position ; 
+    uint32_t id ; 
+} TrackedFeature ; 
+
+/**
  * @brief Struct for a single imu measurement (time, wm, am)
  */
 struct ImuData {
@@ -62,6 +71,9 @@ struct CameraData {
 
   /// Raw image we have collected for each camera
   std::vector<cv::Mat> images;
+
+  /// Measurements of tracked pixels per camera
+  std::vector<std::vector<TrackedFeature>> features ;  
 
   /// Tracking masks for each camera we have
   std::vector<cv::Mat> masks;
