@@ -198,7 +198,8 @@ void ROS1Visualizer::setup_subscribers(std::shared_ptr<ov_core::YamlParser> pars
     std::string dai_sync_topic ; 
     _nh->param<std::string>("dai_sync_topic", dai_sync_topic, "/ffc/sync_images");
     dai_sync_topic = _app->get_params().camera_sync_topic ; 
-    dai_sync_cam = _nh->subscribe(dai_sync_topic, 4, &ROS1Visualizer::callback_sync, this) ; 
+    dai_sync_cam = _nh->subscribe(dai_sync_topic, 4, &ROS1Visualizer::callback_sync, this) ;
+    PRINT_INFO("subscribing to cams (synced): %s\n", dai_sync_topic.c_str()); 
     return ; 
   }
   // Logic for sync stereo subscriber
@@ -507,6 +508,7 @@ void ROS1Visualizer::callback_inertial(const sensor_msgs::Imu::ConstPtr &msg) {
     // If we do not have enough unique cameras then we need to wait
     // We should wait till we have one of each camera to ensure we propagate in the correct order
     auto params = _app->get_params();
+    //size_t num_unique_cameras = (params.state_options.num_cameras == 2 ) ? 1 : params.state_options.num_cameras;
     size_t num_unique_cameras = (params.state_options.num_cameras == 2 || params.dai_sync ) ? 1 : params.state_options.num_cameras;
     if (unique_cam_ids.size() == num_unique_cameras) {
 

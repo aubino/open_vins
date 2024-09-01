@@ -1,0 +1,58 @@
+<launch>
+    <!-- what config we are going to run (should match folder name) -->
+    <arg name="num_cams"   default="2" /> <!-- ALL, DEBUG, INFO, WARNING, ERROR, SILENT -->
+    <arg name="output_topic"      default="/2cams_out" /> <!-- euroc_mav, tum_vi, rpng_aruco -->
+    <arg name="cam0topic"      default="/cam0" />
+    <arg name="cam1topic"      default="/cam1" />
+    <arg name="cam2topic"      default="/cam2" />
+    <arg name="cam3topic"      default="/cam3" />
+    <arg name="cam4topic"      default="/cam4" />
+    <arg name="cam5topic"      default="/cam5" />
+
+    <!-- MASTER NODE! -->
+    <group if="$(eval num_cams == 2)">
+        <node pkg="ov_cam_syncher" type="2cams_syncher" name="cams_syncher" output="screen" required="true">
+            <param name="cam0topic"              type="string" value="$(arg cam0topic)" />
+            <param name="cam1topic"              type="string" value="$(arg cam1topic)" />
+        </node>
+    </group>
+    
+    <group if="$(eval num_cams == 3)">
+        <node pkg="ov_cam_syncher" type="3cams_syncher" name="cams_syncher" output="screen" required="true">
+            <param name="cam0topic"              type="string" value="$(arg cam0topic)" />
+            <param name="cam1topic"              type="string" value="$(arg cam1topic)" />
+            <param name="cam2topic"              type="string" value="$(arg cam2topic)" />
+        </node>
+    </group>
+    
+    <group if="$(eval num_cams == 4)">
+        <node pkg="ov_cam_syncher" type="4cams_syncher" name="cams_syncher" output="screen" required="true">
+            <param name="cam0topic"              type="string" value="$(arg cam0topic)" />
+            <param name="cam1topic"              type="string" value="$(arg cam1topic)" />
+            <param name="cam2topic"              type="string" value="$(arg cam2topic)" />
+            <param name="cam3topic"              type="string" value="$(arg cam3topic)" />
+        </node>
+    </group>
+    
+    <group if="$(eval num_cams == 5)">
+        <node pkg="ov_cam_syncher" type="5cams_syncher" name="cams_syncher" output="screen" required="true">
+            <param name="cam0topic"              type="string" value="$(arg cam0topic)" />
+            <param name="cam1topic"              type="string" value="$(arg cam1topic)" />
+            <param name="cam2topic"              type="string" value="$(arg cam2topic)" />
+            <param name="cam3topic"              type="string" value="$(arg cam3topic)" />
+            <param name="cam4topic"              type="string" value="$(arg cam4topic)" />
+        </node>
+    </group>
+    
+    <group if="$(eval num_cams == 6)">
+        <node pkg="ov_cam_syncher" type="6cams_syncher" name="cams_syncher" output="screen" required="true">
+            <param name="cam0topic"              type="string" value="$(arg cam0topic)" />
+            <param name="cam1topic"              type="string" value="$(arg cam1topic)" />
+            <param name="cam2topic"              type="string" value="$(arg cam2topic)" />
+            <param name="cam3topic"              type="string" value="$(arg cam3topic)" />
+            <param name="cam4topic"              type="string" value="$(arg cam4topic)" />
+            <param name="cam5topic"              type="string" value="$(arg cam5topic)" />
+        </node>
+    </group>
+
+</launch>
