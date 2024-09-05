@@ -49,3 +49,9 @@ void TrackExternal::feed_monocular(const CameraData &message, size_t msg_id)
     // perform_detection_monocular(img_pyramid_last[cam_id], img_mask_last[cam_id], pts_left_old, ids_left_old);
 
 }
+
+void TrackExternal::perform_screening(const std::vector<TrackedFeature> &features0, std::vector<TrackedFeature> &features1, 
+            std::vector<TrackedFeature> &featuresOut ,size_t id0, size_t id1, std::vector<uchar> &mask_out)
+{
+  
+}
