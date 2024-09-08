@@ -577,6 +577,48 @@ void ROS1Visualizer::callback_monocular(const sensor_msgs::ImageConstPtr &msg0, 
   std::sort(camera_queue.begin(), camera_queue.end());
 }
 
+void ROS1Visualizer::callback_monocular_tracker(const depthai_ros_msgs::TrackedFeaturesConstPtr& msg0, int cam_id0)
+{
+  // Check if we should drop this image
+  double timestamp = msg0->header.stamp.toSec();
+  double time_delta = 1.0 / _app->get_params().track_frequency;
+  if (camera_last_timestamp.find(cam_id0) != camera_last_timestamp.end() && timestamp < camera_last_timestamp.at(cam_id0) + time_delta) {
+    return;
+  }
+  camera_last_timestamp[cam_id0] = timestamp;
+  // Create the measurement
+  ov_core::CameraData message;
+  message.timestamp = msg0->header.stamp.toSec();
+  message.sensor_ids.push_back(cam_id0);
+  std::vector<ov_core::TrackedFeature> f ; 
+  for(const auto t : msg0->features)
+  {
+    ov_core::TrackedFeature ov_t ; 
+    ov_t.position = cv::Point2f(t.position.x,t.position.y) ; 
+    ov_t.age = t.age ; 
+    ov_t.harrisScore = t.harris_score ; 
+    ov_t.id = t.id ; 
+    ov_t.trackingError = t.tracking_error ; 
+    f.push_back(ov_t) ; 
+  }
+  message.features.push_back(f) ;
+  // Fill image with a blank 
+
+  // Load the mask if we are using it, else it is empty
+  // TODO: in the future we should get this from external pixel segmentation
+  if (_app->get_params().use_mask) {
+    message.masks.push_back(_app->get_params().masks.at(cam_id0));
+  } else {
+    message.masks.push_back(cv::Mat::zeros(_app->get_params().camera_intrinsics.at(cam_id0)->w(),  _app->get_params().camera_intrinsics.at(cam_id0)->h(), CV_8UC1));
+  }
+  // append it to our queue of images
+  std::lock_guard<std::mutex> lck(camera_queue_mtx);
+  camera_queue.push_back(message);
+  std::sort(camera_queue.begin(), camera_queue.end());
+}
+
+
+
 void ROS1Visualizer::callback_stereo(const sensor_msgs::ImageConstPtr &msg0, const sensor_msgs::ImageConstPtr &msg1, int cam_id0,
                                      int cam_id1) {
 
@@ -625,6 +667,60 @@ void ROS1Visualizer::callback_stereo(const sensor_msgs::ImageConstPtr &msg0, con
     message.masks.push_back(cv::Mat::zeros(cv_ptr1->image.rows, cv_ptr1->image.cols, CV_8UC1));
   }
 
+  // append it to our queue of images
+  std::lock_guard<std::mutex> lck(camera_queue_mtx);
+  camera_queue.push_back(message);
+  std::sort(camera_queue.begin(), camera_queue.end());
+}
+
+void ROS1Visualizer::callback_stereo_tracker(const depthai_ros_msgs::TrackedFeaturesConstPtr& msg0, const depthai_ros_msgs::TrackedFeaturesConstPtr& msg1, int cam_id0, int cam_id1)
+{
+   // Check if we should drop this image
+  double timestamp = msg0->header.stamp.toSec();
+  double time_delta = 1.0 / _app->get_params().track_frequency;
+  if (camera_last_timestamp.find(cam_id0) != camera_last_timestamp.end() && timestamp < camera_last_timestamp.at(cam_id0) + time_delta) {
+    return;
+  }
+  camera_last_timestamp[cam_id0] = timestamp;
+  // Create the measurement
+  ov_core::CameraData message;
+  message.timestamp = msg0->header.stamp.toSec() ;
+  message.sensor_ids.push_back(cam_id0);
+  message.sensor_ids.push_back(cam_id1); 
+  std::vector<ov_core::TrackedFeature> f0, f1 ; 
+  for(const auto t : msg0->features)
+  {
+    ov_core::TrackedFeature ov_t ; 
+    ov_t.position = cv::Point2f(t.position.x,t.position.y) ; 
+    ov_t.age = t.age ; 
+    ov_t.harrisScore = t.harris_score ; 
+    ov_t.id = t.id ; 
+    ov_t.trackingError = t.tracking_error ; 
+    f0.push_back(ov_t) ; 
+  }
+  for(const auto t : msg1->features)
+  {
+    ov_core::TrackedFeature ov_t ; 
+    ov_t.position = cv::Point2f(t.position.x,t.position.y) ; 
+    ov_t.age = t.age ; 
+    ov_t.harrisScore = t.harris_score ; 
+    ov_t.id = t.id ; 
+    ov_t.trackingError = t.tracking_error ; 
+    f1.push_back(ov_t) ; 
+  }
+  message.features.push_back(f0) ;
+  message.features.push_back(f1) ;
+  
+  // Load the mask if we are using it, else it is empty
+  // TODO: in the future we should get this from external pixel segmentation
+  if (_app->get_params().use_mask) {
+    message.masks.push_back(_app->get_params().masks.at(cam_id0));
+    message.masks.push_back(_app->get_params().masks.at(cam_id1));
+  } else {
+    // message.masks.push_back(cv::Mat(cv_ptr0->image.rows, cv_ptr0->image.cols, CV_8UC1, cv::Scalar(255)));
+    message.masks.push_back(cv::Mat::zeros(_app->get_params().camera_intrinsics.at(cam_id0)->w(),  _app->get_params().camera_intrinsics.at(cam_id0)->h(), CV_8UC1));
+    message.masks.push_back(cv::Mat::zeros(_app->get_params().camera_intrinsics.at(cam_id0)->w(),  _app->get_params().camera_intrinsics.at(cam_id1)->h(), CV_8UC1));
+  }
   // append it to our queue of images
   std::lock_guard<std::mutex> lck(camera_queue_mtx);
   camera_queue.push_back(message);
