@@ -28,6 +28,7 @@
 #include "track/TrackDescriptor.h"
 #include "track/TrackKLT.h"
 #include "track/TrackSIM.h"
+#include "track/TrackExternal.h"
 #include "types/Landmark.h"
 #include "types/LandmarkRepresentation.h"
 #include "utils/opencv_lambda_body.h"
@@ -133,7 +134,11 @@ VioManager::VioManager(VioManagerOptions &params_) : thread_init_running(false),
     trackFEATS = std::shared_ptr<TrackBase>(new TrackKLT(state->_cam_intrinsics_cameras, init_max_features,
                                                          state->_options.max_aruco_features, params.use_stereo, params.histogram_method,
                                                          params.fast_threshold, params.grid_x, params.grid_y, params.min_px_dist));
-  } else {
+  } else if(params.use_ext){
+    trackFEATS = std::shared_ptr<TrackBase>(new TrackExternal(state->_cam_intrinsics_cameras,init_max_features,state->_options.max_aruco_features, params.use_stereo, params.histogram_method,
+                                                         params.fast_threshold, params.grid_x, params.grid_y, params.min_px_dist)) ; 
+  } 
+  else {
     trackFEATS = std::shared_ptr<TrackBase>(new TrackDescriptor(
         state->_cam_intrinsics_cameras, init_max_features, state->_options.max_aruco_features, params.use_stereo, params.histogram_method,
         params.fast_threshold, params.grid_x, params.grid_y, params.min_px_dist, params.knn_ratio));
@@ -260,25 +265,33 @@ void VioManager::track_image_and_update(const ov_core::CameraData &message_const
 
   // Assert we have valid measurement data and ids
   assert(!message_const.sensor_ids.empty());
-  assert(message_const.sensor_ids.size() == message_const.images.size());
-  for (size_t i = 0; i < message_const.sensor_ids.size() - 1; i++) {
-    assert(message_const.sensor_ids.at(i) != message_const.sensor_ids.at(i + 1));
-  }
-
-  // Downsample if we are downsampling
   ov_core::CameraData message = message_const;
-  for (size_t i = 0; i < message.sensor_ids.size() && params.downsample_cameras; i++) {
-    cv::Mat img = message.images.at(i);
-    cv::Mat mask = message.masks.at(i);
-    cv::Mat img_temp, mask_temp;
-    cv::pyrDown(img, img_temp, cv::Size(img.cols / 2.0, img.rows / 2.0));
-    message.images.at(i) = img_temp;
-    cv::pyrDown(mask, mask_temp, cv::Size(mask.cols / 2.0, mask.rows / 2.0));
-    message.masks.at(i) = mask_temp;
+  if(!params.use_ext) {
+    assert(message_const.sensor_ids.size() == message_const.images.size());
+    for (size_t i = 0; i < message_const.sensor_ids.size() - 1; i++) {
+      assert(message_const.sensor_ids.at(i) != message_const.sensor_ids.at(i + 1));
+    }
+
+    // Downsample if we are downsampling
+    for (size_t i = 0; i < message.sensor_ids.size() && params.downsample_cameras; i++) {
+      cv::Mat img = message.images.at(i);
+      cv::Mat mask = message.masks.at(i);
+      cv::Mat img_temp, mask_temp;
+      cv::pyrDown(img, img_temp, cv::Size(img.cols / 2.0, img.rows / 2.0));
+      message.images.at(i) = img_temp;
+      cv::pyrDown(mask, mask_temp, cv::Size(mask.cols / 2.0, mask.rows / 2.0));
+     message.masks.at(i) = mask_temp;
+    }
+    // Perform our feature tracking!
+    trackFEATS->feed_new_camera(message);
+  }
+  else 
+  {
+    assert(message_const.sensor_ids.size() == message_const.features.size());
+    trackFEATS->feed_new_camera(message);
   }
 
-  // Perform our feature tracking!
-  trackFEATS->feed_new_camera(message);
+  
 
   // If the aruco tracker is available, the also pass to it
   // NOTE: binocular tracking for aruco doesn't make sense as we by default have the ids

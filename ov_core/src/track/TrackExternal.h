@@ -27,8 +27,8 @@ protected :
     void feed_monocular(const CameraData &message, size_t msg_id);
 
     // Performs a screening and filtering of the incomming tracing points, we won't just take them raw
-    void perform_screening(const std::vector<TrackedFeature> &features0, std::vector<TrackedFeature> &features1, 
-            std::vector<TrackedFeature> &featuresOut ,size_t id0, size_t id1, std::vector<uchar> &mask_out);
+    void perform_screening(const std::vector<TrackedFeature> &features0,const  std::vector<TrackedFeature> &features1, 
+            std::vector<TrackedFeature> &featuresOut ,size_t id0);
 
     // Parameters for our FAST grid detector
     int threshold;

@@ -34,7 +34,10 @@ namespace ov_core {
 typedef struct TrackedFeature
 {
     cv::Point2f position ; 
-    uint32_t id ; 
+    uint32_t id = 0 ; 
+    uint32_t age = 0 ; 
+    float harrisScore = 0.f ; 
+    float trackingError = 0.f ; 
 } TrackedFeature ; 
 
 /**

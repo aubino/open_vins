@@ -414,6 +414,9 @@ struct VioManagerOptions {
   /// If we should use KLT tracking, or descriptor matcher
   bool use_klt = true;
 
+  /// If we should use external tracker
+  bool use_ext = false ; 
+
   /// If should extract aruco tags and estimate them
   bool use_aruco = true;
 
@@ -469,6 +472,7 @@ struct VioManagerOptions {
     if (parser != nullptr) {
       parser->parse_config("use_stereo", use_stereo);
       parser->parse_config("use_klt", use_klt);
+      parser->parse_config("use_ext", use_ext,false);
       parser->parse_config("use_aruco", use_aruco);
       parser->parse_config("downsize_aruco", downsize_aruco);
       parser->parse_config("downsample_cameras", downsample_cameras);
