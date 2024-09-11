@@ -15,10 +15,10 @@ calib_imu_g_sensitivity: true # if gyroscope gravity sensitivity (Tg) should be 
 
 max_clones: 11 # how many clones in the sliding window
 max_slam: 80 # number of features in our state vector
-max_slam_in_update: 50 # update can be split into sequential updates of batches, how many in a batch
+max_slam_in_update: 40 # update can be split into sequential updates of batches, how many in a batch
 max_msckf_in_update: 40 # how many MSCKF features to use in the update
 dt_slam_delay: 1.0 # delay before initializing (helps with stability from bad initialization...)
-dai_sync: true
+dai_sync: false
 camera_sync_topic: "/2cams_out"
 
 gravity_mag: 9.81 # magnitude of gravity in this location
@@ -82,10 +82,10 @@ filepath_gt: "/home/aubin/mult_eval/ov_groundtruth.txt"
 # we have a KLT and descriptor based (KLT is better implemented...)
 use_klt: true # if true we will use KLT, otherwise use a ORB descriptor + robust matching
 num_pts: 200 # number of points (per camera) we will extract and try to track
-fast_threshold: 25 # threshold for fast extraction (warning: lower threshs can be expensive)
-grid_x: 10 # extraction sub-grid count for horizontal direction (uniform tracking)
-grid_y: 10 # extraction sub-grid count for vertical direction (uniform tracking)
-min_px_dist: 30 # distance between features (features near each other provide less information)
+fast_threshold: 20 # threshold for fast extraction (warning: lower threshs can be expensive)
+grid_x: 5 # extraction sub-grid count for horizontal direction (uniform tracking)
+grid_y: 5 # extraction sub-grid count for vertical direction (uniform tracking)
+min_px_dist: 15 # distance between features (features near each other provide less information)
 knn_ratio: 0.70 # descriptor knn threshold for the top two descriptor matches
 track_frequency: 31.0 # frequency we will perform feature tracking at (in frames per second / hertz)
 downsample_cameras: true # will downsample image in half if true

@@ -128,6 +128,9 @@ public:
   /// Callback for synchronized cameras informations
   void callback_stereo(const sensor_msgs::ImageConstPtr &msg0, const sensor_msgs::ImageConstPtr &msg1, int cam_id0, int cam_id1);
 
+  /// Callback for synchronized cameras informations
+  void callback_triple(const sensor_msgs::ImageConstPtr &msg0, const sensor_msgs::ImageConstPtr &msg1, const sensor_msgs::ImageConstPtr &msg2, int cam_id0, int cam_id1 , int cam_id2);
+
   /// Callback for synchronized stereo camera information
   void callback_stereo_tracker(const depthai_ros_msgs::TrackedFeaturesConstPtr& msg0, const depthai_ros_msgs::TrackedFeaturesConstPtr& msg1, int cam_id0, int cam_id1);
 
@@ -171,7 +174,7 @@ protected:
   ros::Subscriber sub_imu;
   std::vector<ros::Subscriber> subs_cam;
   typedef message_filters::sync_policies::ApproximateTime<sensor_msgs::Image, sensor_msgs::Image> sync_pol;
-  typedef message_filters::sync_policies::ApproximateTime<sensor_msgs::Image, sensor_msgs::Image> sync_pol3;
+  typedef message_filters::sync_policies::ApproximateTime<sensor_msgs::Image, sensor_msgs::Image, sensor_msgs::Image> sync_pol3;
   typedef message_filters::sync_policies::ApproximateTime<depthai_ros_msgs::TrackedFeatures, depthai_ros_msgs::TrackedFeatures> sync_pol_ext;
   typedef message_filters::sync_policies::ApproximateTime<depthai_ros_msgs::TrackedFeatures, depthai_ros_msgs::TrackedFeatures,sensor_msgs::Image , sensor_msgs::Image> sync_pol_ext_deb ; 
   std::vector<std::shared_ptr<message_filters::Synchronizer<sync_pol>>> sync_cam;
