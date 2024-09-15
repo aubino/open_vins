@@ -173,13 +173,16 @@ protected:
   // Our subscribers and camera synchronizers
   ros::Subscriber sub_imu;
   std::vector<ros::Subscriber> subs_cam;
+  std::vector<ros::Subscriber> subs_tracker ; 
   typedef message_filters::sync_policies::ApproximateTime<sensor_msgs::Image, sensor_msgs::Image> sync_pol;
   typedef message_filters::sync_policies::ApproximateTime<sensor_msgs::Image, sensor_msgs::Image, sensor_msgs::Image> sync_pol3;
   typedef message_filters::sync_policies::ApproximateTime<depthai_ros_msgs::TrackedFeatures, depthai_ros_msgs::TrackedFeatures> sync_pol_ext;
   typedef message_filters::sync_policies::ApproximateTime<depthai_ros_msgs::TrackedFeatures, depthai_ros_msgs::TrackedFeatures,sensor_msgs::Image , sensor_msgs::Image> sync_pol_ext_deb ; 
   std::vector<std::shared_ptr<message_filters::Synchronizer<sync_pol>>> sync_cam;
   std::vector<std::shared_ptr<message_filters::Synchronizer<sync_pol3>>> sync_3cam;
+  std::vector<std::shared_ptr<message_filters::Synchronizer<sync_pol_ext>>> sync_ext_track;
   std::vector<std::shared_ptr<message_filters::Subscriber<sensor_msgs::Image>>> sync_subs_cam;
+  std::vector<std::shared_ptr<message_filters::Subscriber<depthai_ros_msgs::TrackedFeatures>>> sync_subs_ext_track;
   ros::Subscriber dai_sync_cam ; 
 
   // For path viz

@@ -203,6 +203,28 @@ void ROS1Visualizer::setup_subscribers(std::shared_ptr<ov_core::YamlParser> pars
     return ; 
   }
   // Logic for sync stereo subscriber
+  if(_app->get_params().use_ext && _app->get_params().state_options.num_cameras == 2)
+  {
+    // Read in the topics
+    std::string cam_topic0, cam_topic1;
+    _nh->param<std::string>("topic_camera" + std::to_string(0), cam_topic0, "/cam" + std::to_string(0) + "/features");
+    _nh->param<std::string>("topic_camera" + std::to_string(1), cam_topic1, "/cam" + std::to_string(1) + "/features");
+    parser->parse_external("relative_config_imucam", "cam" + std::to_string(0), "rostopic", cam_topic0);
+    parser->parse_external("relative_config_imucam", "cam" + std::to_string(1), "rostopic", cam_topic1);
+    // Create sync filter (they have unique pointers internally, so we have to use move logic here...)
+    auto track_sub0 = std::make_shared<message_filters::Subscriber<depthai_ros_msgs::TrackedFeatures>>(*_nh, cam_topic0, 1);
+    auto track_sub1 = std::make_shared<message_filters::Subscriber<depthai_ros_msgs::TrackedFeatures>>(*_nh, cam_topic1, 1);
+    auto sync = std::make_shared<message_filters::Synchronizer<sync_pol_ext>>(sync_pol_ext(10), *track_sub0, *track_sub1);
+    sync->registerCallback(boost::bind(&ROS1Visualizer::callback_stereo_tracker, this, _1, _2, 0, 1));
+    sync_ext_track.push_back(sync) ; 
+    sync_subs_ext_track.push_back(track_sub0) ; 
+    sync_subs_ext_track.push_back(track_sub1) ; 
+    PRINT_INFO("subscribing to cam (stereo tracker): %s\n", cam_topic0.c_str());
+    PRINT_INFO("subscribing to cam (stereo tracker): %s\n", cam_topic1.c_str());
+    return ;
+
+  }
+  
   // https://answers.ros.org/question/96346/subscribe-to-two-image_raws-with-one-function/?answer=96491#post-id-96491
   if (_app->get_params().state_options.num_cameras == 2) {
     // Read in the topics
@@ -220,8 +242,9 @@ void ROS1Visualizer::setup_subscribers(std::shared_ptr<ov_core::YamlParser> pars
     sync_cam.push_back(sync);
     sync_subs_cam.push_back(image_sub0);
     sync_subs_cam.push_back(image_sub1);
-    PRINT_INFO("subscribing to cam (stereo): %s\n", cam_topic0.c_str());
-    PRINT_INFO("subscribing to cam (stereo): %s\n", cam_topic1.c_str());
+    PRINT_INFO("subscribing to cam (stereo ): %s\n", cam_topic0.c_str());
+    PRINT_INFO("subscribing to cam (stereo ): %s\n", cam_topic1.c_str());
+  
   } else if(_app->get_params().state_options.num_cameras == 3 ){
     // Read in the topics
     std::string cam_topic0, cam_topic1 , cam_topic2;
@@ -246,6 +269,7 @@ void ROS1Visualizer::setup_subscribers(std::shared_ptr<ov_core::YamlParser> pars
     PRINT_INFO("subscribing to cam (triple): %s\n", cam_topic1.c_str()); 
     PRINT_INFO("subscribing to cam (triple): %s\n", cam_topic2.c_str());
   } 
+  
   else {
     // Now we should add any non-stereo callbacks here
     for (int i = 0; i < _app->get_params().state_options.num_cameras; i++) {
@@ -253,6 +277,13 @@ void ROS1Visualizer::setup_subscribers(std::shared_ptr<ov_core::YamlParser> pars
       std::string cam_topic;
       _nh->param<std::string>("topic_camera" + std::to_string(i), cam_topic, "/cam" + std::to_string(i) + "/image_raw");
       parser->parse_external("relative_config_imucam", "cam" + std::to_string(i), "rostopic", cam_topic);
+      if(_app->get_params().use_ext)
+      {
+        subs_tracker.push_back(_nh->subscribe<depthai_ros_msgs::TrackedFeature>(cam_topic, 10, boost::bind(&ROS1Visualizer::callback_monocular_tracker, this, _1, i)))
+        PRINT_INFO("subscribing to cam (mono tracker): %s\n", cam_topic.c_str());
+        continue; 
+      }
+      
       // create subscriber
       subs_cam.push_back(_nh->subscribe<sensor_msgs::Image>(cam_topic, 10, boost::bind(&ROS1Visualizer::callback_monocular, this, _1, i)));
       PRINT_INFO("subscribing to cam (mono): %s\n", cam_topic.c_str());
@@ -640,8 +671,6 @@ void ROS1Visualizer::callback_monocular_tracker(const depthai_ros_msgs::TrackedF
   camera_queue.push_back(message);
   std::sort(camera_queue.begin(), camera_queue.end());
 }
-
-
 
 void ROS1Visualizer::callback_stereo(const sensor_msgs::ImageConstPtr &msg0, const sensor_msgs::ImageConstPtr &msg1, int cam_id0,
                                      int cam_id1) {

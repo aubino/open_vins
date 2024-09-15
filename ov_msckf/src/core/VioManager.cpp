@@ -285,9 +285,11 @@ void VioManager::track_image_and_update(const ov_core::CameraData &message_const
     // Perform our feature tracking!
     trackFEATS->feed_new_camera(message);
   }
-  else 
-  {
+  else {
     assert(message_const.sensor_ids.size() == message_const.features.size());
+    for (size_t i = 0; i < message_const.sensor_ids.size() - 1; i++) {
+      assert(message_const.sensor_ids.at(i) != message_const.sensor_ids.at(i + 1));
+    }
     trackFEATS->feed_new_camera(message);
   }
 
