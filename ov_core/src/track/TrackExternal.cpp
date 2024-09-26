@@ -78,7 +78,6 @@ void TrackExternal::feed_monocular(const CameraData &message, size_t msg_id)
         ids_last[cam_id] = good_ids_left;
     }
   rT5 = boost::posix_time::microsec_clock::local_time();
-
 }
 
 void TrackExternal::perform_screening(const std::vector<TrackedFeature> &features0, const std::vector<TrackedFeature> &features1, 
@@ -99,7 +98,7 @@ void TrackExternal::perform_screening(const std::vector<TrackedFeature> &feature
 
 void TrackExternal::feed_new_camera(const CameraData &message)
 {
-     // Error check that we have all the data
+    // Error check that we have all the data
     if (message.sensor_ids.empty() || message.sensor_ids.size() != message.features.size() || message.features.size() != message.masks.size()) {
         PRINT_ERROR(RED "[ERROR]: MESSAGE DATA SIZES DO NOT MATCH OR EMPTY!!!\n" RESET);
         PRINT_ERROR(RED "[ERROR]:   - message.sensor_ids.size() = %zu\n" RESET, message.sensor_ids.size());

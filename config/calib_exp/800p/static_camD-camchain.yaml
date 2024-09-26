@@ -1,0 +1,8 @@
+cam0:
+  cam_overlaps: []
+  camera_model: pinhole
+  distortion_coeffs: [-0.007844893505884944, 0.008805535665783643, 0.0005476253539323238, -0.0014426222209424652]
+  distortion_model: equidistant
+  intrinsics: [562.4835897839102, 562.2758027650797, 641.8907203697211, 432.82602102944185]
+  resolution: [1280, 800]
+  rostopic: /feature_tracker_imu/camD

@@ -279,7 +279,7 @@ void ROS1Visualizer::setup_subscribers(std::shared_ptr<ov_core::YamlParser> pars
       parser->parse_external("relative_config_imucam", "cam" + std::to_string(i), "rostopic", cam_topic);
       if(_app->get_params().use_ext)
       {
-        subs_tracker.push_back(_nh->subscribe<depthai_ros_msgs::TrackedFeature>(cam_topic, 10, boost::bind(&ROS1Visualizer::callback_monocular_tracker, this, _1, i)))
+        subs_tracker.push_back(_nh->subscribe<depthai_ros_msgs::TrackedFeatures>(cam_topic, 10, boost::bind(&ROS1Visualizer::callback_monocular_tracker, this, _1, i))) ;
         PRINT_INFO("subscribing to cam (mono tracker): %s\n", cam_topic.c_str());
         continue; 
       }
