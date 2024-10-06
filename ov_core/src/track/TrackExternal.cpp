@@ -11,6 +11,7 @@ using namespace ov_core;
 
 void TrackExternal::feed_monocular(const CameraData &message, size_t msg_id)
 {
+    PRINT_DEBUG(BOLDYELLOW "TrackExternal::feed_monocular recieved %zu features",message.features[msg_id].size()) ; 
     size_t cam_id = message.sensor_ids.at(msg_id);
     std::lock_guard<std::mutex> lck(mtx_feeds.at(cam_id));
     cv::Mat mask = message.masks.at(msg_id);
